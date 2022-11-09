@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>br.com.zaiac</groupId>
+    <artifactId>ebcofilemgmt</artifactId>
+    <version>1.0</version>
+    <packaging>jar</packaging>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
+    <dependencies>
+        
+        <dependency>
+          <groupId>com.jcraft</groupId>
+          <artifactId>jsch</artifactId>
+          <version>0.1.55</version>
+        </dependency>
+
+        
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.14</version>
+            <type>jar</type>
+        </dependency>
+        
+        <dependency>
+          <groupId>org.bytedeco</groupId>
+          <artifactId>javacv-platform</artifactId>
+          <version>1.5.7</version>
+        </dependency> 
+        
+        <dependency>
+          <groupId>br.com.zaiac</groupId>
+          <artifactId>ebcolibrary</artifactId>
+          <version>1.0</version>
+        </dependency> 
+        
+        
+<!--
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>opencv</artifactId>
+            <version>4.5.5-1.5.7</version>
+            <type>jar</type>
+        </dependency>
+-->
+<!--        
+        <dependency>
+            <groupId>javax.json</groupId>
+            <artifactId>javax.json-api</artifactId>
+            <version>1.1.4</version>
+            <type>jar</type>
+        </dependency>
+-->        
+        <dependency>
+          <groupId>org.glassfish</groupId>
+          <artifactId>javax.json</artifactId>
+          <version>1.1.4</version>
+        </dependency>        
+        
+        
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.13</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>jaxrs-api</artifactId>
+            <version>2.2.0.GA</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.12.3</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>1.12</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.1</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.6</version>
+            <type>jar</type>
+        </dependency>
+        
+<!-- https://mvnrepository.com/artifact/com.google.cloud/google-cloud-storage -->
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-storage</artifactId>
+            <version>2.4.5</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+            <version>2.11.1</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20220320</version>
+            <type>jar</type>
+        </dependency>
+    </dependencies>
+    <name>Ebco File Management</name>
+    
+    <profiles>
+        <profile>
+            <id>pre</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <executions>
+                          <execution>
+                            <id>copy-dependencies</id>
+                            <phase>package</phase>
+                            <goals>
+                              <goal>copy-dependencies</goal>
+                            </goals>
+                            <configuration>
+                              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                              <overWriteReleases>false</overWriteReleases>
+                              <overWriteSnapshots>false</overWriteSnapshots>
+                              <overWriteIfNewer>true</overWriteIfNewer>
+                            </configuration>
+                          </execution>
+                        </executions>                    
+                    </plugin>
+
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.2.2</version>
+                        <configuration>
+                          <archive>
+                            <manifest>
+                              <addClasspath>true</addClasspath>
+                              <classpathPrefix>lib/</classpathPrefix>
+                              <mainClass>br.com.zaiac.ebcofilemgmt.Main</mainClass>
+                            </manifest>
+                          </archive>
+                        </configuration>
+                    </plugin>
+
+
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.0.2</version>
+                        <executions> 
+                            <execution>
+                                <id>copy-resource-two</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${basedir}/target</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>/</directory>
+                                            <includes>
+                                                <include>*.json</include>
+                                                <include>*.bat</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>  
+                        </executions>
+                    </plugin>     
+                    <plugin>
+                      <artifactId>maven-antrun-plugin</artifactId>
+                      <executions>
+                        <execution>
+                          <phase>test</phase>
+                          <goals>
+                            <goal>run</goal>
+                          </goals>
+                          <configuration>
+                            <tasks>
+                              <delete file="${project.build.outputDirectory}/config.properties"/>
+                              <copy file="${basedir}/config.pre.properties"
+                                    tofile="${basedir}/target/config.properties"/>
+                            </tasks>
+                          </configuration>
+                        </execution>
+                      </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+
+        <profile>
+            <id>dev</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <executions>
+                          <execution>
+                            <id>copy-dependencies</id>
+                            <phase>package</phase>
+                            <goals>
+                              <goal>copy-dependencies</goal>
+                            </goals>
+                            <configuration>
+                              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                              <overWriteReleases>false</overWriteReleases>
+                              <overWriteSnapshots>false</overWriteSnapshots>
+                              <overWriteIfNewer>true</overWriteIfNewer>
+                            </configuration>
+                          </execution>
+                        </executions>                    
+                    </plugin>
+
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.2.2</version>
+                        <configuration>
+                          <archive>
+                            <manifest>
+                              <addClasspath>true</addClasspath>
+                              <classpathPrefix>lib/</classpathPrefix>
+                              <mainClass>br.com.zaiac.ebcofilemgmt.Main</mainClass>
+                            </manifest>
+                          </archive>
+                        </configuration>
+                    </plugin>
+
+
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.0.2</version>
+                        <executions> 
+                            <execution>
+                                <id>copy-resource-two</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${basedir}/target</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>/</directory>
+                                            <includes>
+                                                <include>*.json</include>
+                                                <include>*.bat</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>  
+                        </executions>
+                    </plugin>     
+                    <plugin>
+                      <artifactId>maven-antrun-plugin</artifactId>
+                      <executions>
+                        <execution>
+                          <phase>test</phase>
+                          <goals>
+                            <goal>run</goal>
+                          </goals>
+                          <configuration>
+                            <tasks>
+                              <delete file="${project.build.outputDirectory}/config.properties"/>
+                              <copy file="${basedir}/config.dev.properties"
+                                    tofile="${basedir}/target/config.properties"/>
+                            </tasks>
+                          </configuration>
+                        </execution>
+                      </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+                
+                                
+        <profile>
+            <id>hom</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <executions>
+                          <execution>
+                            <id>copy-dependencies</id>
+                            <phase>package</phase>
+                            <goals>
+                              <goal>copy-dependencies</goal>
+                            </goals>
+                            <configuration>
+                              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                              <overWriteReleases>false</overWriteReleases>
+                              <overWriteSnapshots>false</overWriteSnapshots>
+                              <overWriteIfNewer>true</overWriteIfNewer>
+                            </configuration>
+                          </execution>
+                        </executions>                    
+                    </plugin>
+
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.2.2</version>
+                        <configuration>
+                          <archive>
+                            <manifest>
+                              <addClasspath>true</addClasspath>
+                              <classpathPrefix>lib/</classpathPrefix>
+                              <mainClass>br.com.zaiac.ebcofilemgmt.Main</mainClass>
+                            </manifest>
+                          </archive>
+                        </configuration>
+                    </plugin>
+
+
+                    <plugin>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.0.2</version>
+                        <executions> 
+        <!--                                       
+                            <execution>
+                                <id>copy-resource-one</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${basedir}/target/KeyPair</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>/KeyPair</directory>
+                                            <includes>
+                                                <include>*</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>   
+        -->                                     
+                            <execution>
+                                <id>copy-resource-two</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${basedir}/target</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>/</directory>
+                                            <includes>
+                                                <include>*.json</include>
+                                                <include>*.bat</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>  
+                        </executions>
+                    </plugin>     
+                    <plugin>
+                      <artifactId>maven-antrun-plugin</artifactId>
+                      <executions>
+                        <execution>
+                          <phase>test</phase>
+                          <goals>
+                            <goal>run</goal>
+                          </goals>
+                          <configuration>
+                            <tasks>
+                              <delete file="${project.build.outputDirectory}/config.properties"/>
+                              <copy file="${basedir}/config.hom.properties"
+                                    tofile="${basedir}/target/config.properties"/>
+                            </tasks>
+                          </configuration>
+                        </execution>
+                      </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+    </profiles>
+    
+    
+</project>

@@ -1,0 +1,9 @@
+/target/
+*.json
+*.exe
+/logs/
+/KeyPair
+*.jar
+*.class
+*.zip
+
