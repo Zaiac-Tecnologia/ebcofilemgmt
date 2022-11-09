@@ -251,7 +251,7 @@ public class SendFiles {
         
         ChannelSftp sftp;
         try {
-            sftp = setupJsch(siteSFTPDestination, siteSFTPUsername, siteSFTPPassword);
+            sftp = setupJsch(siteSFTPDestination, siteSFTPPort, siteSFTPUsername, siteSFTPPassword);
             sftp.connect();
             try {
                 File[] files = file.listFiles();
@@ -300,15 +300,15 @@ public class SendFiles {
         return true;
     }
     
-    private static ChannelSftp setupJsch(String remoteHost, String username, String password) throws JSchException {
+    private static ChannelSftp setupJsch(String remoteHost, Integer remotePort, String username, String password) throws JSchException {
         JSch jsch = new JSch();
         java.util.Properties config = new java.util.Properties(); 
         config.put("StrictHostKeyChecking", "no");
         
-        //jsch.setKnownHosts("/Users/john/.ssh/known_hosts");
         Session jschSession = jsch.getSession(username, remoteHost);
         jschSession.setPassword(password);
-        jschSession.setConfig(config);        
+        jschSession.setConfig(config);  
+        jschSession.setPort(remotePort);
         jschSession.connect();
         return (ChannelSftp) jschSession.openChannel("sftp");
     }    
