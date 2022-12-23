@@ -1,13 +1,10 @@
 package br.com.zaiac.ebcofilemgmt.tools;
 
 import br.com.zaiac.ebcofilemgmt.exception.ProcessIncompleteException;
+import static br.com.zaiac.ebcofilemgmt.tools.MergeFiles.missing;
+import static br.com.zaiac.ebcofilemgmt.tools.MergeFiles.readStringFromMissingFile;
 import br.com.zaiac.ebcolibrary.LogApp;
 import com.google.auth.oauth2.GoogleCredentials;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
@@ -22,14 +19,18 @@ import com.jcraft.jsch.SftpException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
-//import java.util.logging.Level;
-//import java.util.logging.Logger;
+import java.util.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
+
 public class SendFiles {
     private static String logDirectory;
+    public static Boolean debugMode;
     
     //private static SftpClientFactory sftpClientFactory;
     
@@ -49,7 +50,7 @@ public class SendFiles {
         }
         
         try {
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Queue process started...", 0);
+            if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Queue process started...", 0);
         } catch(IOException e) {
             System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
             System.exit(10);
@@ -63,122 +64,66 @@ public class SendFiles {
         
         try {
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Reading missing queue started...", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Reading missing queue started...", 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
             
             File missingList = new File(new File("").getCanonicalPath() + "\\\\missing");
-            File[] filesMissing = missingList.listFiles();
-            Arrays.sort(filesMissing);           
-            for (File file : filesMissing) {                
-                trkId = file.getName();
-                File baseDirFile = new File(baseDir + "\\\\" + trkId);
-                
-                if(!baseDirFile.exists()) {
-                    try {
-                        LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Source Directory " + 
-                                file.getAbsolutePath() + " not found. Missing for " + file.getAbsolutePath() + " will be deleted", 2);
-                        file.delete();
-                        continue;
-                    } catch(IOException e) {
-                        System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
-                        System.exit(10);
-                    }
-                }                
-                
-                try {
-                    File fileCopy = new File(baseDirFile.getAbsolutePath());
-                    File[] filesCopy = fileCopy.listFiles();
-                    
-                    if (!MergeFiles.checkAllNeedFilesEbco(filesCopy, trkId)) {
-                        throw new ProcessIncompleteException();
-                    }
-                    
-                    processStep = "sftp";
-                    sftp(baseDir, siteDestination, siteSFTPDestination, siteSFTPPort, siteSFTPUsername, siteSFTPPassword, trkId);
-                    SendFiles.moveFiles(baseDir, moveDir, trkId);
-                    processStep = "finished";
-                    try {
-                        LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Missing for " + file.getAbsolutePath() + " deleted.", 0);
-                        file.delete();
-                    } catch(IOException e) {
-                        System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
-                        System.exit(10);
-                    }
-                    
-                } catch (ProcessIncompleteException e) {
-                    try {
-                        LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Incomplete Process Issue for Truck Id " + trkId, 2);
-                    } catch(IOException e2) {
-                        System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
-                        System.exit(10);
-                    }
-                }
-            }
-            
-            try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Reading missing queue done.", 0);
-            } catch(IOException e) {
-                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
-                System.exit(10);
-            }
-            
-            try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Reading queue started...", 0);
-            } catch(IOException e) {
-                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
-                System.exit(10);
-            }
-            
-        
-        // Read Queue Files
-        
-            File queueList = new File(new File("").getCanonicalPath() + "\\\\queue");
-            File[] filesQueue = queueList.listFiles();
-            Arrays.sort(filesQueue);
+            if (missingList.exists() && missingList.isDirectory()) {
+                File[] filesMissing = missingList.listFiles();
+                Arrays.sort(filesMissing);           
+                for (File file : filesMissing) {
+                    trkId = file.getName();
+                    File baseDirFile = new File(baseDir + "\\\\" + trkId);
 
-            for (File file : filesQueue) {                
-                trkId = file.getName();
-                File baseDirFile = new File(baseDir + "\\\\" + trkId);
-                
-                if(!baseDirFile.exists()) {
+                    if(!baseDirFile.exists()) {
+                        try {
+                            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Source Directory " + 
+                                    file.getAbsolutePath() + " not found. Missing for " + file.getAbsolutePath() + " will be deleted", 2);
+                            file.delete();
+                            continue;
+                        } catch(IOException e) {
+                            System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                            System.exit(10);
+                        }
+                    }                
+
                     try {
-                        LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Source Directory " + 
-                                file.getAbsolutePath() + " not found. Queue for " + file.getAbsolutePath() + " will be deleted", 2);
-                        file.delete();
-                        continue;
-                    } catch(IOException e) {
-                        System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
-                        System.exit(10);
-                    }
-                }
-                
-                try {
-                    LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Queue for " + file.getAbsolutePath() + " deleted.", 0);
-                    file.delete();
-                } catch(IOException e) {
-                    System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
-                    System.exit(10);
-                }
-                
-                try {
-                    File fileCopy = new File(baseDirFile.getAbsolutePath());
-                    File[] filesCopy = fileCopy.listFiles();
-                    
-                    if (!MergeFiles.checkAllNeedFilesEbco(filesCopy, trkId)) {
-                        throw new ProcessIncompleteException();
-                    }
-                    processStep = "sftp";
-                    sftp(baseDir, siteDestination, siteSFTPDestination, siteSFTPPort, siteSFTPUsername, siteSFTPPassword, trkId);
-                    SendFiles.moveFiles(baseDir, moveDir, trkId);
-                    processStep = "finished";
-                    
-                } catch (ProcessIncompleteException e) {
-                    try {
-                        MergeFiles.missing(missingDir, trkId, processStep);
-                    } catch (ProcessIncompleteException e1) {
+                        File fileCopy = new File(baseDirFile.getAbsolutePath());
+                        File[] filesCopy = fileCopy.listFiles();
+                        
+
+                        if (!MergeFiles.checkAllNeedFilesEbco(filesCopy, trkId)) {
+                            throw new ProcessIncompleteException();
+                        }
+                        
+                        String currentProcessStep = readStringFromMissingFile(missingList.getAbsolutePath(), trkId);
+                        Integer currentProcessStepSequence = 0;                        
+                        if (currentProcessStep.equalsIgnoreCase("sftp")) currentProcessStepSequence = 1;
+                        if (currentProcessStep.equalsIgnoreCase("deleteDirectory")) currentProcessStepSequence = 2;                    
+
+                        processStep = "sftp";
+                        if (currentProcessStepSequence < 1) { 
+                            sftp (baseDir, siteDestination, siteSFTPDestination, siteSFTPPort, siteSFTPUsername, siteSFTPPassword, trkId); 
+                            missing(missingDir, trkId, processStep);
+                        }
+                        
+                        processStep = "deleteDirectory";
+                        if (currentProcessStepSequence < 1) { 
+                            SendFiles.deleteDirectory(baseDir, trkId);
+                            missing(missingDir, trkId, processStep);
+                        }
+                        try {
+                            if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Missing for " + file.getAbsolutePath() + " deleted.", 0);
+                            file.delete();
+                        } catch(IOException e) {
+                            System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                            System.exit(10);
+                        }
+
+                    } catch (ProcessIncompleteException e) {
                         try {
                             LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Incomplete Process Issue for Truck Id " + trkId, 2);
                         } catch(IOException e2) {
@@ -187,10 +132,100 @@ public class SendFiles {
                         }
                     }
                 }
+            } else {
+                try{
+                    LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, String.format("Missing Directory %s not exists", missingList.getAbsoluteFile()), 2);
+                } catch(IOException e) {
+                    System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                    System.exit(10);
+                }
+                
             }
             
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Queue process done.", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Reading missing queue done.", 0);
+            } catch(IOException e) {
+                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                System.exit(10);
+            }
+            
+            try {
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Reading queue started...", 0);
+            } catch(IOException e) {
+                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                System.exit(10);
+            }
+            
+        
+            // Read Queue Files
+        
+            File queueList = new File(new File("").getCanonicalPath() + "\\\\queue");
+            if (queueList.exists() && queueList.isDirectory()) {
+                File[] filesQueue = queueList.listFiles();
+                Arrays.sort(filesQueue);
+
+                for (File file : filesQueue) {                
+                    trkId = file.getName();
+                    File baseDirFile = new File(baseDir + "\\\\" + trkId);
+
+                    if(!baseDirFile.exists()) {
+                        try {
+                            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Source Directory " + 
+                                    file.getAbsolutePath() + " not found. Queue for " + file.getAbsolutePath() + " will be deleted", 2);
+                            file.delete();
+                            continue;
+                        } catch(IOException e) {
+                            System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                            System.exit(10);
+                        }
+                    }
+
+                    try {
+                        if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Queue for " + file.getAbsolutePath() + " deleted.", 0);
+                        file.delete();
+                    } catch(IOException e) {
+                        System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                        System.exit(10);
+                    }
+
+                    try {
+                        File fileCopy = new File(baseDirFile.getAbsolutePath());
+                        File[] filesCopy = fileCopy.listFiles();
+                        
+                        processStep = "start";
+                        if (!MergeFiles.checkAllNeedFilesEbco(filesCopy, trkId)) {
+                            throw new ProcessIncompleteException();
+                        }
+
+                        sftp (baseDir, siteDestination, siteSFTPDestination, siteSFTPPort, siteSFTPUsername, siteSFTPPassword, trkId);
+                        processStep = "sftp";                        
+                        SendFiles.deleteDirectory(baseDir, trkId);
+                        processStep = "deleteDirectory";
+
+                    } catch (ProcessIncompleteException e) {
+                        try {
+                            MergeFiles.missing(missingDir, trkId, processStep);
+                        } catch (ProcessIncompleteException e1) {
+                            try {
+                                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Incomplete Process Issue for Truck Id " + trkId, 2);
+                            } catch(IOException e2) {
+                                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                                System.exit(10);
+                            }
+                        }
+                    }
+                }                
+            } else {
+                try{
+                    LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, String.format("Queue Directory %s not exists", queueList.getAbsoluteFile()), 2);
+                } catch(IOException e) {
+                    System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                    System.exit(10);
+                }
+            }
+            
+            try {
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Queue process done.", 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -198,7 +233,7 @@ public class SendFiles {
         
         } catch (IOException e) {
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Cannot access Missing or Queue List.", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Cannot access Missing or Queue List.", 0);
             } catch(IOException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -231,6 +266,15 @@ public class SendFiles {
             return false;
         }
         File file = new File(baseDir, fileName);
+        if (!file.exists()) {
+            try {
+                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Filename not exist " + fileName, 2);
+            } catch(IOException e1) {
+                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                System.exit(10);
+            }
+            return false;
+        }
         if (!file.isDirectory()) {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Filename is not a directory " + fileName, 2);
@@ -250,6 +294,7 @@ public class SendFiles {
         SftpATTRS attrs=null;
         
         ChannelSftp sftp;
+        
         try {
             sftp = setupJsch(siteSFTPDestination, siteSFTPPort, siteSFTPUsername, siteSFTPPassword);
             sftp.connect();
@@ -282,21 +327,24 @@ public class SendFiles {
                 } catch (Exception e) {
                     sftp.mkdir(targetDirNameLevel3);
                 }
-                
-                for (File fileCopy : files) {
+                for (File fileCopy : files) { 
                     uploadAndVerifyFile(sftp, targetDirNameLevel3, fileCopy.getAbsolutePath());
                 }
             } catch (ProcessIncompleteException e) {
-                throw new ProcessIncompleteException(e.toString());    
+                throw new ProcessIncompleteException(e.toString());
             } catch (SftpException e) {
-                throw new ProcessIncompleteException(e.toString());    
+                throw new ProcessIncompleteException(e.toString());
+            } catch (Exception e) {
+                throw new ProcessIncompleteException(e.toString());                
             }
             sftp.exit();
             
         } catch (JSchException e) {
             throw new ProcessIncompleteException(e.toString());    
-            //Logger.getLogger(SendFiles.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception e) {
+            throw new ProcessIncompleteException(e.toString());    
         }
+        
         return true;
     }
     
@@ -317,7 +365,7 @@ public class SendFiles {
         final String filePath = dirName + "/" + FilenameUtils.getName(filename);
         try { 
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Uploading file " + filename + " to " + filePath + " is starting...", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Uploading file " + filename + " to " + filePath + " is starting...", 0);
             } catch(IOException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -325,7 +373,7 @@ public class SendFiles {
             
             sftp.put(filename, filePath);
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Uploaded file " + filename + " to " + filePath + " complete.", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Uploaded file " + filename + " to " + filePath + " complete.", 0);
             } catch(IOException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -382,7 +430,7 @@ public class SendFiles {
                 System.exit(10);
             }
             
-        }
+        } 
         GoogleCredentials credentials = null;
         try {
             credentials = GoogleCredentials.fromStream(new FileInputStream(GoogleApplicationCredentialsFile)).createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
@@ -413,18 +461,23 @@ public class SendFiles {
             BlobId blobIdKey = BlobId.of(bucketName, objectNameKey);
             BlobInfo blobInfoKey = BlobInfo.newBuilder(blobIdKey).build();
             
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE,"Sending key file " + new File(filePathKey).getAbsolutePath() + " started...", 0);
+            if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE,"Sending key file " + new File(filePathKey).getAbsolutePath() + " started...", 0);
             storage.create(blobInfoKey, Files.readAllBytes(Paths.get(filePathKey)));
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Sending key file " + new File(filePathKey).getAbsolutePath() + " done.", 0);
+            if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Sending key file " + new File(filePathKey).getAbsolutePath() + " done.", 0);
             
             BlobId blobIdPie = BlobId.of(bucketName, objectNamePie);
             BlobInfo blobInfoPie = BlobInfo.newBuilder(blobIdPie).build();
             
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Sending pie file " + new File(filePathPie).getAbsolutePath() + " started...", 0);
+            if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Sending pie file " + new File(filePathPie).getAbsolutePath() + " started...", 0);
             storage.create(blobInfoPie, Files.readAllBytes(Paths.get(filePathPie)));
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Sending pie file " + new File(filePathPie).getAbsolutePath() + " done.", 0);
+            if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Sending pie file " + new File(filePathPie).getAbsolutePath() + " done.", 0);
         } catch (IOException e) {
+            System.err.println(e.toString());
             throw new ProcessIncompleteException(e.toString());
+        } catch (Exception e) {
+            System.err.println(e.toString());
+            throw new ProcessIncompleteException(e.toString());
+            
         }
     }
     
@@ -443,19 +496,19 @@ public class SendFiles {
         destinationDirectory = new File(moveDir + "\\\\" + yearMonth + "\\\\" + yearMonthDay + "\\\\" + trkId);
         
         try {            
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Moving files from " + sourceDirectory.getAbsolutePath() + " to " + sourceDirectory.getAbsolutePath() + " Started...",  0);
+            if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Moving files from " + sourceDirectory.getAbsolutePath() + " to " + sourceDirectory.getAbsolutePath() + " Started...",  0);
             if (destinationDirectory.exists()) {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Moving Destination Directory Exist " + sourceDirectory.getAbsolutePath() + ". Will be Deleted.", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Moving Destination Directory Exist " + sourceDirectory.getAbsolutePath() + ". Will be Deleted.", 0);
                 FileUtils.deleteDirectory(destinationDirectory);
             }
             
             FileUtils.moveDirectory(sourceDirectory, destinationDirectory);
             
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Moving files from " + sourceDirectory.getAbsolutePath() + " to " + sourceDirectory.getAbsolutePath() + " Done...", 0);
+            if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Moving files from " + sourceDirectory.getAbsolutePath() + " to " + sourceDirectory.getAbsolutePath() + " Done...", 0);
             
         } catch (IOException e) {
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Moving files from " + sourceDirectory.getAbsolutePath() + " to " + sourceDirectory.getAbsolutePath() + " Error. " + e.toString(), 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Moving files from " + sourceDirectory.getAbsolutePath() + " to " + sourceDirectory.getAbsolutePath() + " Error. " + e.toString(), 0);
                 throw new ProcessIncompleteException(e.toString());                            
             } catch(IOException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
@@ -463,8 +516,29 @@ public class SendFiles {
             }            
             
         }
-        
+    }
+    
+    public static void deleteDirectory(String baseDir, String trkId) throws ProcessIncompleteException {
+        File sourceDirectory = new File(baseDir + "\\\\" + trkId);
+        try {            
+            FileUtils.deleteDirectory(sourceDirectory);            
+            if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Directory " + sourceDirectory.getAbsolutePath() + " Deleted.", 0);            
+        } catch (IOException e) {
+            try {
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Moving files from " + sourceDirectory.getAbsolutePath() + " to " + sourceDirectory.getAbsolutePath() + " Error. " + e.toString(), 0);
+                throw new ProcessIncompleteException(e.toString());                            
+            } catch(IOException e1) {
+                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                System.exit(10);
+            }            
+            
+        }
     }
     
     
+    public static String convertStringToBase64(String value)  {
+        byte[] byteData = value.getBytes();
+        String base64String = Base64.getEncoder().encodeToString(byteData);
+        return base64String;       
+    }
 }

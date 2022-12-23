@@ -5,6 +5,7 @@ import br.com.zaiac.ebcofilemgmt.cryptography.GenerateKeys;
 import br.com.zaiac.ebcofilemgmt.exception.ProcessIncompleteException;
 import br.com.zaiac.ebcofilemgmt.tools.Image;
 import br.com.zaiac.ebcofilemgmt.tools.MergeFiles;
+import br.com.zaiac.ebcofilemgmt.tools.Monitor;
 import br.com.zaiac.ebcofilemgmt.tools.SendFiles;
 import br.com.zaiac.ebcolibrary.ConfigProperties;
 import java.io.File;
@@ -35,6 +36,7 @@ public class Main {
         String siteSFTPUsername;
         String siteSFTPPassword;
         Integer siteSFTPPort;
+        Boolean debugMode;
         
         Boolean iaLocalAvailable;
         
@@ -58,6 +60,30 @@ public class Main {
             
         }
         
+        Monitor.diskMonitor = ConfigProperties.getPropertyValue("DISK_MONITOR");
+        Monitor.pingSite = Integer.parseInt(ConfigProperties.getPropertyValue("PING"));                
+        Monitor.siteId = ConfigProperties.getPropertyValue("SITE");
+        Monitor.siteId = ConfigProperties.getPropertyValue("SITE");
+        Monitor.urlBackEnd = ConfigProperties.getPropertyValue("URL_BACKEND");
+        Monitor.sourceSite = ConfigProperties.getPropertyValue("SOURCE_SITE");
+        
+        try {
+            debugMode = Boolean.parseBoolean(ConfigProperties.getPropertyValue("DEBUG_MODE"));
+            if (debugMode) {
+                System.out.println("DEBUG_MODE Ligado");
+            } else {
+                System.out.println("DEBUG_MODE Desligado");
+            }
+        } catch(Exception e) {
+            debugMode = false;
+            System.out.println("DEBUG_MODE Desligado");
+        }
+        
+        MergeFiles.debugMode = debugMode;
+        SendFiles.debugMode = debugMode;
+        
+        
+        
         switch(type.toLowerCase()) {
             case "create":
                 switch (operation.toLowerCase()) {
@@ -69,7 +95,12 @@ public class Main {
                 }
                 break;
                 
+            case "monitor":
+                Monitor.sendInformationToBackEnd();
+                break;
+                
             case "all":
+                
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
                 gcProject = ConfigProperties.getPropertyValue("GC_PROJECT");
                 gcsPie = ConfigProperties.getPropertyValue("GCS_PIE");
@@ -77,6 +108,8 @@ public class Main {
                 moveDir = ConfigProperties.getPropertyValue("MOVE_DIRECTORY");
                 urlIaLocal = ConfigProperties.getPropertyValue("URL_IA_LOCAL");
                 GoogleApplicationCredentials = ConfigProperties.getPropertyValue("GOOGLE_APPLICATION_CREDENTIALS");
+                
+                Monitor.sendInformationToBackEnd();
 
                 try {
                     Image.getImageCheioVazio(baseDir, urlIaLocal, operation);
@@ -86,6 +119,7 @@ public class Main {
                     SendFiles.moveFiles(baseDir, moveDir, operation);
                 } catch (ProcessIncompleteException e) {}
                 break;
+                
             case "queue":
                 
                 siteDestination = ConfigProperties.getPropertyValue("SITE_DESTINATION");
@@ -93,7 +127,7 @@ public class Main {
                 moveDir = ConfigProperties.getPropertyValue("MOVE_DIRECTORY");
                 missingDirectory = ConfigProperties.getPropertyValue("MISSING_DIRECTORY");
                 
-                
+                Monitor.sendInformationToBackEnd();
                 
                 if (siteDestination.equalsIgnoreCase("EBCO")) {
                     siteSFTPDestination = ConfigProperties.getPropertyValue("SITE_SFTP_DESTINATION");
@@ -131,6 +165,8 @@ public class Main {
                 
             case "enqueue":
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
+                Monitor.sendInformationToBackEnd();
+                
                 try {
                     MergeFiles.enqueue(baseDir, operation);
                 } catch (ProcessIncompleteException e) {}
@@ -163,6 +199,7 @@ public class Main {
                 gcProject = ConfigProperties.getPropertyValue("GC_PROJECT");
                 gcsPie = ConfigProperties.getPropertyValue("GCS_PIE");
                 keyDir = ConfigProperties.getPropertyValue("KEYPAIR_DIRECTORY");
+                
                 GoogleApplicationCredentials = ConfigProperties.getPropertyValue("GOOGLE_APPLICATION_CREDENTIALS");
                 try {
                     SendFiles.uploadObject(gcProject, gcsPie, baseDir, operation, keyDir, GoogleApplicationCredentials);

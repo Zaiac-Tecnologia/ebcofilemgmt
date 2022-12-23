@@ -15,13 +15,10 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-//import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.io.StringReader;
 import java.util.Arrays;
-
-
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
@@ -31,10 +28,11 @@ import javax.json.JsonReader;
 
 public class MergeFiles {
     private static String logDirectory;
+    public static Boolean debugMode;
     
     static public synchronized void writeFileToQueue (String queueDirectory, String queueFile) throws IOException {
         BufferedWriter wfbw;
-        wfbw = new BufferedWriter(new FileWriter(new File(queueDirectory + "/" + queueFile), true));
+        wfbw = new BufferedWriter(new FileWriter(new File(queueDirectory + "/" + queueFile), false));
         wfbw.write("");
         wfbw.flush();
         wfbw.close();
@@ -42,7 +40,7 @@ public class MergeFiles {
     
     static public synchronized void writeFileToQueue (String queueDirectory, String queueFile, String processStep) throws IOException {
         BufferedWriter wfbw;
-        wfbw = new BufferedWriter(new FileWriter(new File(queueDirectory + "/" + queueFile), true));
+        wfbw = new BufferedWriter(new FileWriter(new File(queueDirectory + "/" + queueFile), false));
         wfbw.write(processStep);
         wfbw.flush();
         wfbw.close();
@@ -56,6 +54,17 @@ public class MergeFiles {
         return line;
     }
     
+    
+/*
+  +---------------------------------------------------------------------------+
+  |   Este processo le os dados que foram enfileirados e faz o processo       |
+  |   de Merge, Encrypt, UploadFiles e MoveFiles                              |
+  |                                                                           |      
+  +---------------------------------------------------------------------------+  
+*/    
+    
+    
+    
 
     public static void queue(String baseDir, String moveDir, String missingDir, Boolean iaLocalAvailable, String gcProject, String gcsPie, String keyDir, String GoogleApplicationCredentials, String urlIaLocal) {
         try {
@@ -66,7 +75,7 @@ public class MergeFiles {
         }
         
         try {
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Queue process started...", 0);
+            if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Queue process started...", 0);
         } catch(IOException e) {
             System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
             System.exit(10);
@@ -78,9 +87,11 @@ public class MergeFiles {
         String trkId = "";
         String processStep = "";
         
+        Monitor.sendInformationToBackEnd();
+        
         try {
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Reading missing queue started...", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Reading missing queue started...", 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -111,15 +122,23 @@ public class MergeFiles {
                         Image.getImageCheioVazio(baseDir, urlIaLocal, trkId);                
                     } catch (IOException e) {
                         try {
-                            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Check Local Analyse Cheio/Vazio for Truck Id " + trkId, 2);
+                            System.err.println(e.toString());
+                            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Check Local Analyse Cheio/Vazio for Truck Id " + trkId + " (IOException)", 2);
+                        } catch(IOException e1) {
+                            System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                            System.exit(10);
+                        }
+                    } catch (Exception e) {
+                        try {
+                            System.err.println(e.toString());                            
+                            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Check Local Analyse Cheio/Vazio for Truck Id " + trkId + " (Exception)", 2);
                         } catch(IOException e1) {
                             System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                             System.exit(10);
                         }
                     }
-                } else {
-                    
-                    LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Disabled Local Analyse Cheio/Vazio for Truck Id " + trkId, 0);
+                } else {                    
+                    if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Disabled Local Analyse Cheio/Vazio for Truck Id " + trkId, 0);
                 }
 
                 
@@ -131,15 +150,36 @@ public class MergeFiles {
                         throw new ProcessIncompleteException();
                     }
                     
+                    String currentProcessStep = readStringFromMissingFile(missingList.getAbsolutePath(), trkId);
+                    Integer currentProcessStepSequence = 0;
+                    if (currentProcessStep.equalsIgnoreCase("merge")) currentProcessStepSequence = 1;
+                    if (currentProcessStep.equalsIgnoreCase("encryptFile")) currentProcessStepSequence = 2;
+                    if (currentProcessStep.equalsIgnoreCase("uploadObject")) currentProcessStepSequence = 3;
+                    if (currentProcessStep.equalsIgnoreCase("moveFiles")) currentProcessStepSequence = 4;
+                    
                     processStep = "merge";
-                    MergeFiles.merge(baseDir, trkId);                
+                    if (currentProcessStepSequence < 1) { 
+                        MergeFiles.merge(baseDir, trkId);
+                        missing(missingDir, trkId, processStep);
+                    }
+                    
                     processStep = "encryptFile";
-                    AsymmetricCryptography.encryptFile(baseDir, keyDir, trkId);
+                    if (currentProcessStepSequence < 2) {
+                        AsymmetricCryptography.encryptFile(baseDir, keyDir, trkId);
+                        missing(missingDir, trkId, processStep);
+                    }
+                    
                     processStep = "uploadObject";
-                    SendFiles.uploadObject(gcProject, gcsPie, baseDir, trkId, keyDir, GoogleApplicationCredentials);
+                    if (currentProcessStepSequence < 3) {
+                        SendFiles.uploadObject(gcProject, gcsPie, baseDir, trkId, keyDir, GoogleApplicationCredentials);
+                        missing(missingDir, trkId, processStep);
+                    }
+
                     processStep = "moveFiles";
-                    SendFiles.moveFiles(baseDir, moveDir, trkId);
-                    processStep = "finished";
+                    if (currentProcessStepSequence < 4) {
+                        SendFiles.moveFiles(baseDir, moveDir, trkId);
+                        missing(missingDir, trkId, processStep);
+                    }
                     try {
                         LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Missing for " + file.getAbsolutePath() + " deleted.", 0);
                         file.delete();
@@ -147,6 +187,8 @@ public class MergeFiles {
                         System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                         System.exit(10);
                     }
+                    
+                    Monitor.sendInformationToBackEnd();
                     
                 } catch (ProcessIncompleteException e) {
                     try {
@@ -159,25 +201,28 @@ public class MergeFiles {
             }
             
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Reading missing queue done.", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Reading missing queue done.", 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
             
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Reading queue started...", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Reading queue started...", 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
             
         
-        // Read Queue Files
+            // Read Queue Files
+        
+            Monitor.sendInformationToBackEnd();
         
             File queueList = new File(new File("").getCanonicalPath() + "\\\\queue");
             File[] filesQueue = queueList.listFiles();
             Arrays.sort(filesQueue);
+            
 
             for (File file : filesQueue) {                
                 trkId = file.getName();
@@ -196,7 +241,7 @@ public class MergeFiles {
                 }
                 
                 try {
-                    LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Queue for " + file.getAbsolutePath() + " deleted.", 0);
+                    if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Queue for " + file.getAbsolutePath() + " deleted.", 0);
                     file.delete();
                 } catch(IOException e) {
                     System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
@@ -209,32 +254,41 @@ public class MergeFiles {
                         Image.getImageCheioVazio(baseDir, urlIaLocal, trkId);                
                     } catch (IOException e) {
                         try {
-                            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Check Local Analyse Cheio/Vazio for Truck Id " + trkId, 2);
+                            System.err.println(e.toString());
+                            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Check Local Analyse Cheio/Vazio for Truck Id " + trkId + " (IOException)", 2);
+                        } catch(IOException e1) {
+                            System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                            System.exit(10);
+                        }
+                    } catch (Exception e) {
+                        try {
+                            System.err.println(e.toString());
+                            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Check Local Analyse Cheio/Vazio for Truck Id " + trkId + " (Exception)", 2);
                         } catch(IOException e1) {
                             System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                             System.exit(10);
                         }
                     }
+                    
                 } else {
-                    LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Disabled Local Analyse Cheio/Vazio for Truck Id " + trkId, 0);
+                    if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Disabled Local Analyse Cheio/Vazio for Truck Id " + trkId, 0);
                 }
                 try {
                     File fileCopy = new File(baseDirFile.getAbsolutePath());
                     File[] filesCopy = fileCopy.listFiles();
                     
+                    processStep = "start";
                     if (!checkAllNeedFiles(filesCopy, trkId)) {
                         throw new ProcessIncompleteException();
                     }
-                    
-                    processStep = "merge";
-                    MergeFiles.merge(baseDir, trkId);                
-                    processStep = "encryptFile";
+                    MergeFiles.merge(baseDir, trkId);
+                    processStep = "merge";                    
                     AsymmetricCryptography.encryptFile(baseDir, keyDir, trkId);
-                    processStep = "uploadObject";
+                    processStep = "encryptFile";
                     SendFiles.uploadObject(gcProject, gcsPie, baseDir, trkId, keyDir, GoogleApplicationCredentials);
-                    processStep = "moveFiles";
+                    processStep = "uploadObject";                    
                     SendFiles.moveFiles(baseDir, moveDir, trkId);
-                    processStep = "finished";
+                    processStep = "moveFiles";                    
                 } catch (ProcessIncompleteException e) {
                     try {
                         missing(missingDir, trkId, processStep);
@@ -247,10 +301,12 @@ public class MergeFiles {
                         }
                     }
                 }
+                
+                Monitor.sendInformationToBackEnd();
             }
             
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Queue process done.", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Queue process done.", 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -258,7 +314,7 @@ public class MergeFiles {
         
         } catch (IOException e) {
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Cannot access Missing or Queue List.", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Cannot access Missing or Queue List.", 0);
             } catch(IOException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -284,6 +340,8 @@ public class MergeFiles {
             System.err.print("Cannot get Local Path for Log Directory");
             System.exit(10);
         }
+        
+        Monitor.sendInformationToBackEnd();
         
         File sourceDirectory = new File(baseDir + "\\\\" + trkId);
         if (!sourceDirectory.exists()) {
@@ -322,7 +380,7 @@ public class MergeFiles {
         try {
             writeFileToQueue(queueDirectory.getAbsolutePath(), trkId);
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Enqueue Source Directory " + trkId + " enqueued successfully", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Enqueue Source Directory " + trkId + " enqueued successfully", 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -396,7 +454,7 @@ public class MergeFiles {
         try {
             String line = readStringFromMissingFile(missingDirectory.getAbsolutePath(), trkId);
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Missing Source Directory " + trkId + " Step Stopped missing is " + line, 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Missing Source Directory " + trkId + " Step Stopped missing is " + line, 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -425,8 +483,7 @@ public class MergeFiles {
         if (!sourceDirectory.exists()) {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Missing Source Directory " + sourceDirectory.getAbsolutePath() + " not found", 2);
-                System.exit(10);
-                
+                System.exit(10);                
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -438,7 +495,7 @@ public class MergeFiles {
         try {
             writeFileToQueue(sourceDirectory.getAbsolutePath(), trkId, processStep);
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Missing Source Directory " + trkId + " enqueued successfully", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Missing Source Directory " + trkId + " enqueued successfully", 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -483,7 +540,7 @@ public class MergeFiles {
         File ofile = new File(file_name);   
         
         try {
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Merge file " + ofile.getAbsolutePath() + " started ...", 0);
+            if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Merge file " + ofile.getAbsolutePath() + " started ...", 0);
         } catch(IOException e) {
             System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
             System.exit(10);
@@ -492,7 +549,7 @@ public class MergeFiles {
         
         if (ofile.exists()) {
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Merge Destination file " + ofile.getAbsolutePath() + " found. Will be deleted", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Merge Destination file " + ofile.getAbsolutePath() + " found. Will be deleted", 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -565,7 +622,7 @@ public class MergeFiles {
             fos.close();
             
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Merge file " + ofile.getAbsolutePath() + " done.", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Merge file " + ofile.getAbsolutePath() + " done.", 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
@@ -611,7 +668,7 @@ public class MergeFiles {
         
         
         try {
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Split file " + inputFile.getAbsolutePath() + " started.", 0);
+            if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Split file " + inputFile.getAbsolutePath() + " started.", 0);
         } catch(IOException e) {
             System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
             System.exit(10);
@@ -640,7 +697,7 @@ public class MergeFiles {
                 fos.close();
                 
                 try {
-                    LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Split file " + ofile.getAbsolutePath() + " generated successfully.", 0);
+                    if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Split file " + ofile.getAbsolutePath() + " generated successfully.", 0);
                 } catch(IOException e) {
                     System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                     System.exit(10);
@@ -651,7 +708,7 @@ public class MergeFiles {
             inputStream.close();
             
             try {
-                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Split file " + inputFile.getAbsolutePath() + " done.", 0);
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Split file " + inputFile.getAbsolutePath() + " done.", 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
