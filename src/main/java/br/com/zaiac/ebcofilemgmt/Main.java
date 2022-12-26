@@ -67,6 +67,7 @@ public class Main {
         Monitor.urlBackEnd = ConfigProperties.getPropertyValue("URL_BACKEND");
         Monitor.sourceSite = ConfigProperties.getPropertyValue("SOURCE_SITE");
         
+        
         try {
             debugMode = Boolean.parseBoolean(ConfigProperties.getPropertyValue("DEBUG_MODE"));
             if (debugMode) {
@@ -81,6 +82,7 @@ public class Main {
         
         MergeFiles.debugMode = debugMode;
         SendFiles.debugMode = debugMode;
+        Monitor.debugMode = debugMode;
         
         
         
@@ -96,7 +98,7 @@ public class Main {
                 break;
                 
             case "monitor":
-                Monitor.sendInformationToBackEnd();
+                Monitor.sendInformationToBackEnd(true);
                 break;
                 
             case "all":
@@ -109,7 +111,8 @@ public class Main {
                 urlIaLocal = ConfigProperties.getPropertyValue("URL_IA_LOCAL");
                 GoogleApplicationCredentials = ConfigProperties.getPropertyValue("GOOGLE_APPLICATION_CREDENTIALS");
                 
-                Monitor.sendInformationToBackEnd();
+                Monitor.sendInformationToBackEnd(false);
+                    
 
                 try {
                     Image.getImageCheioVazio(baseDir, urlIaLocal, operation);
@@ -127,7 +130,7 @@ public class Main {
                 moveDir = ConfigProperties.getPropertyValue("MOVE_DIRECTORY");
                 missingDirectory = ConfigProperties.getPropertyValue("MISSING_DIRECTORY");
                 
-                Monitor.sendInformationToBackEnd();
+                Monitor.sendInformationToBackEnd(false);
                 
                 if (siteDestination.equalsIgnoreCase("EBCO")) {
                     siteSFTPDestination = ConfigProperties.getPropertyValue("SITE_SFTP_DESTINATION");
@@ -165,7 +168,7 @@ public class Main {
                 
             case "enqueue":
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
-                Monitor.sendInformationToBackEnd();
+                Monitor.sendInformationToBackEnd(false);
                 
                 try {
                     MergeFiles.enqueue(baseDir, operation);

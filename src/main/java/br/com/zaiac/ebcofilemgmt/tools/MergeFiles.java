@@ -87,7 +87,7 @@ public class MergeFiles {
         String trkId = "";
         String processStep = "";
         
-        Monitor.sendInformationToBackEnd();
+        Monitor.sendInformationToBackEnd(false);
         
         try {
             try {
@@ -186,9 +186,9 @@ public class MergeFiles {
                     } catch(IOException e) {
                         System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                         System.exit(10);
-                    }
+                    }                    
                     
-                    Monitor.sendInformationToBackEnd();
+                    Monitor.sendInformationToBackEnd(false);
                     
                 } catch (ProcessIncompleteException e) {
                     try {
@@ -217,7 +217,7 @@ public class MergeFiles {
         
             // Read Queue Files
         
-            Monitor.sendInformationToBackEnd();
+            Monitor.sendInformationToBackEnd(false);
         
             File queueList = new File(new File("").getCanonicalPath() + "\\\\queue");
             File[] filesQueue = queueList.listFiles();
@@ -301,8 +301,7 @@ public class MergeFiles {
                         }
                     }
                 }
-                
-                Monitor.sendInformationToBackEnd();
+                Monitor.sendInformationToBackEnd(false);
             }
             
             try {
@@ -341,7 +340,7 @@ public class MergeFiles {
             System.exit(10);
         }
         
-        Monitor.sendInformationToBackEnd();
+        Monitor.sendInformationToBackEnd(false);
         
         File sourceDirectory = new File(baseDir + "\\\\" + trkId);
         if (!sourceDirectory.exists()) {

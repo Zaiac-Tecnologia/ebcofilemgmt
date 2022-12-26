@@ -1,5 +1,6 @@
 package br.com.zaiac.ebcofilemgmt.tools;
 
+import br.com.zaiac.ebcofilemgmt.exception.SendInformationException;
 import br.com.zaiac.ebcofilemgmt.rest.MethodPost;
 import br.com.zaiac.ebcolibrary.LogApp;
 import java.io.File;
@@ -13,8 +14,6 @@ import java.lang.management.ThreadMXBean;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.io.FilenameUtils;
 
 public class Monitor {
@@ -23,6 +22,10 @@ public class Monitor {
         public static String diskMonitor;
         public static Integer pingSite;
         public static String sourceSite;
+        
+        private static String logDirectory;
+        public static Boolean debugMode;
+        
 
 
     public static String getDiskInformation(String diskMonitor) {
@@ -101,12 +104,21 @@ public class Monitor {
         }        
     }
     
-    public static void sendInformationToBackEnd() {
+    public static void sendInformationToBackEnd(Boolean force) {
         String canonicalPath;
         try {
+            logDirectory = new File("").getCanonicalPath() + "\\\\logs";
+        } catch (IOException e) {
+            System.err.print("Cannot get Local Path for Log Directory");
+            System.exit(10);
+        }
+        
+        
+        String versao = Constants.APP_VERSION;
+        String filemgmt = Constants.LOGFILE;          
+        
+        try {
             canonicalPath = new File("").getCanonicalPath();
-            String versao = Constants.APP_VERSION;
-            String filemgmt = Constants.LOGFILE;          
 
             File f = new File(canonicalPath, filemgmt + ".ver");
             if (!f.exists()) {
@@ -125,7 +137,7 @@ public class Monitor {
             
             dataSys.add(Calendar.SECOND, pingSite * -1);
 
-            if (dataSys.after(dataFile)) {
+            if (dataSys.after(dataFile) || force) {
                 try {
                     LogApp.writeVersionToFile(canonicalPath, filemgmt + ".ver", Constants.APP_VERSION);
                 } catch (Exception e) {
@@ -133,6 +145,14 @@ public class Monitor {
                     System.exit(10);
                 }
                 try {
+                    
+                    try {
+                        if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, String.format("Request Start to Backend %s", urlBackEnd), 0);
+                    } catch(IOException e1) {
+                        System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                        System.exit(10);
+                    }            
+                    
                     StringBuffer ret = new StringBuffer();
                     ret.append("{");
                     ret.append(String.format("\"site\": \"%s\"",  siteId));
@@ -148,15 +168,26 @@ public class Monitor {
                     ret.append(Monitor.getAppVersionInformation(canonicalPath));
                     ret.append("}");
                     MethodPost.httpPing(ret.toString(), urlBackEnd);
+                    
+                    try {
+                        if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, String.format("Request Complete to Backend %s", urlBackEnd), 0);
+                        if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, String.format("Sent Information %s", ret.toString()), 0);
+                    } catch(IOException e1) {
+                        System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                        System.exit(10);
+                    }            
                 } catch (Exception e) {
-                    System.err.print(String.format("Cannot send information to backend. Check internet conection"));
-                    //System.exit(10);
+                    System.err.println(e.toString());
+                    throw new SendInformationException(e.toString());
                 }
-                
             }
-        }
-        catch (IOException ex) {
-            Logger.getLogger(Monitor.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception e) {
+            try {
+                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, e.toString(), 2);
+            } catch(IOException e1) {
+                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                System.exit(10);
+            }            
         }
     }
     
