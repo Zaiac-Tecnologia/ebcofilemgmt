@@ -7,6 +7,7 @@ import br.com.zaiac.ebcofilemgmt.tools.Image;
 import br.com.zaiac.ebcofilemgmt.tools.MergeFiles;
 import br.com.zaiac.ebcofilemgmt.tools.Monitor;
 import br.com.zaiac.ebcofilemgmt.tools.SendFiles;
+import br.com.zaiac.ebcofilemgmt.xml.ConvertXmlFile;
 import br.com.zaiac.ebcolibrary.ConfigProperties;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -99,6 +100,10 @@ public class Main {
                 
             case "monitor":
                 Monitor.sendInformationToBackEnd(true);
+                break;
+                
+            case "convertxml":
+                ConvertXmlFile.convertXmlFile();
                 break;
                 
             case "all":
