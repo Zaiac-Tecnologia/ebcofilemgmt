@@ -38,6 +38,7 @@ public class Main {
         String siteSFTPPassword;
         Integer siteSFTPPort;
         Boolean debugMode;
+        String xmlConverter;
         
         Boolean iaLocalAvailable;
         
@@ -81,7 +82,20 @@ public class Main {
             System.out.println("DEBUG_MODE Desligado");
         }
         
+        try {
+            xmlConverter = ConfigProperties.getPropertyValue("XMLCONVERTER");            
+            if (xmlConverter.equalsIgnoreCase("NONE") || xmlConverter.equalsIgnoreCase("CARGO")) {                
+            } else {
+                System.out.println("XML Converter Incorrect");
+                System.exit(1);
+            }
+        } catch(Exception e) {
+            xmlConverter = "NONE";            
+        }
+        
         MergeFiles.debugMode = debugMode;
+        MergeFiles.xmlConverter = xmlConverter;
+        
         SendFiles.debugMode = debugMode;
         Monitor.debugMode = debugMode;
         
@@ -103,7 +117,10 @@ public class Main {
                 break;
                 
             case "convertxml":
-                ConvertXmlFile.convertXmlFile();
+                baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
+                if(xmlConverter.equalsIgnoreCase("CARGO")) {
+                    ConvertXmlFile.convertXmlFileCargo(baseDir, operation);
+                }
                 break;
                 
             case "all":

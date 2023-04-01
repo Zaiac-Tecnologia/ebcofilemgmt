@@ -38,4 +38,12 @@ public class AdminData {
     public void createVehicle() {
         this.vehicle = new Vehicle();
     }
+    
+    public void createTrailers() {
+        this.vehicle.createTrailers();
+    }
+    
+    public void createTrailer() {
+        this.vehicle.getTrailers().createTrailer();
+    }
 }

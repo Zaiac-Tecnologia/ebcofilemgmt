@@ -2,6 +2,7 @@ package br.com.zaiac.ebcofilemgmt.tools;
 
 import br.com.zaiac.ebcofilemgmt.cryptography.AsymmetricCryptography;
 import br.com.zaiac.ebcofilemgmt.exception.ProcessIncompleteException;
+import br.com.zaiac.ebcofilemgmt.xml.ConvertXmlFile;
 import br.com.zaiac.ebcolibrary.LogApp;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -29,6 +30,7 @@ import javax.json.JsonReader;
 public class MergeFiles {
     private static String logDirectory;
     public static Boolean debugMode;
+    public static String xmlConverter;
     
     static public synchronized void writeFileToQueue (String queueDirectory, String queueFile) throws IOException {
         BufferedWriter wfbw;
@@ -561,6 +563,36 @@ public class MergeFiles {
         byte[] fileBytesOutput;
         byte[] fileBytes;
 //        int bytesRead = 0;
+
+        if (xmlConverter.equalsIgnoreCase("CARGO")) {
+            ConvertXmlFile.convertXmlFileCargo(baseDir, trkId);
+            
+            File fi = new File(baseDir + "\\" + trkId, trkId + ".xml");
+            File fo = new File(baseDir + "\\" + trkId, trkId + "_.xml");
+            if (fo.exists()) {
+                fo.delete();
+            }
+            try {
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, String.format("XML - Source -> %s, Destination -> ", fi.getAbsolutePath(), fo.getPath()), 0);
+            } catch(IOException e) {
+                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                System.exit(10);
+            }            
+            
+            System.out.println(String.format("XML - Source -> %s, Destination -> ", fi.getAbsolutePath(), fo.getPath()));
+            fi.renameTo(fo);
+            
+            fi = new File(baseDir + "\\" + trkId, trkId + "_converted.xml");
+            fo = new File(baseDir + "\\" + trkId, trkId + ".xml");
+            try {
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, String.format("XML CONVERTED - Source -> %s, Destination -> ", fi.getAbsolutePath(), fo.getPath()), 0);
+            } catch(IOException e) {
+                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                System.exit(10);
+            }            
+
+            fi.renameTo(fo);            
+        }
         
         try {
             fos = new FileOutputStream(ofile, true);
@@ -581,7 +613,8 @@ public class MergeFiles {
                                 || name.toLowerCase().endsWith(".tif") 
                                 || name.toLowerCase().endsWith(".img") 
                                 || name.toLowerCase().endsWith("_ocr.jpg")
-                                || name.toLowerCase().endsWith(".json");                       
+                                || name.toLowerCase().endsWith("s.jpg")
+                                || name.toLowerCase().endsWith(".json"); 
                     }})) {
                 jab.add("file_name", file.getName());
                 jab.add("file_size", file.length());
@@ -605,6 +638,7 @@ public class MergeFiles {
                                 || name.toLowerCase().endsWith(".tif") 
                                 || name.toLowerCase().endsWith(".img") 
                                 || name.toLowerCase().endsWith("_ocr.jpg")
+                                || name.toLowerCase().endsWith("s.jpg")
                                 || name.toLowerCase().endsWith(".json");
                     }})) {
                 

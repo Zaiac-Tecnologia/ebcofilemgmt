@@ -1,7 +1,13 @@
 package br.com.zaiac.ebcofilemgmt.xml.classes;
 import br.com.zaiac.ebcofilemgmt.xml.classes.admindata.AdminData;
+import br.com.zaiac.ebcofilemgmt.xml.classes.admindata.Container;
+import br.com.zaiac.ebcofilemgmt.xml.classes.admindata.Containers;
+import br.com.zaiac.ebcofilemgmt.xml.classes.admindata.Trailer;
+import br.com.zaiac.ebcofilemgmt.xml.classes.admindata.Trailers;
+import br.com.zaiac.ebcofilemgmt.xml.classes.admindata.Vehicle;
+import br.com.zaiac.ebcofilemgmt.xml.classes.operations.Operation;
+import br.com.zaiac.ebcofilemgmt.xml.classes.operations.Operations;
 import br.com.zaiac.ebcofilemgmt.xml.classes.processinstructions.ProcessInstructions;
-import java.util.Date;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -12,7 +18,7 @@ public class DataForm {
     
     private Integer state;
     private String site;
-    private Date date;
+    private String date;
     private Integer inTraining;
     private Integer inReference;
     private Integer archived;
@@ -23,6 +29,16 @@ public class DataForm {
     private Integer pending;
     private AdminData adminData;
     private ProcessInstructions processInstructions;
+    private Operations operations;
+
+    public Operations getOperations() {
+        return operations;
+    }
+    
+    @XmlElement(name="Operations")
+    public void setOperations(Operations operations) {
+        this.operations = operations;
+    }
 
     public ProcessInstructions getProcessInstructions() {
         return processInstructions;
@@ -78,12 +94,12 @@ public class DataForm {
         this.site = site;
     }
 
-    public Date getDate() {
+    public String getDate() {
         return date;
     }
 
     @XmlElement(name="Date")
-    public void setDate(Date date) {
+    public void setDate(String date) {
         this.date = date;
     }
 
@@ -137,7 +153,7 @@ public class DataForm {
         return checkedOut;
     }
 
-    @XmlElement(name="Archived")
+    @XmlElement(name="CheckedOut")
     public void setCheckedOut(Integer checkedOut) {
         this.checkedOut = checkedOut;
     }
@@ -146,7 +162,7 @@ public class DataForm {
         return approved;
     }
 
-    @XmlElement(name="Archived")
+    @XmlElement(name="Approved")
     public void setApproved(Integer approved) {
         this.approved = approved;
     }
@@ -167,4 +183,60 @@ public class DataForm {
     public void createVehicle() {
         this.adminData.createVehicle();
     }
+    public Vehicle getVehicle() {
+        return this.adminData.getVehicle();
+    }
+    
+    
+    public void createTrailers() {
+        this.adminData.createTrailers();
+    }
+    
+    public Trailers getTrailers() {
+        return this.adminData.getVehicle().getTrailers();
+    }
+    
+    public int createTrailer() {
+        return this.adminData.getVehicle().getTrailers().createTrailer();
+    }
+    
+    public Trailer getTrailerIndex(int i) {
+        return this.adminData.getVehicle().getTrailers().getTrailerIndex(i);
+    }
+    
+
+    public void createOperations() {
+        this.operations = new Operations();
+    }
+    
+    public int createOperation() {
+        return this.operations.createOperation();
+    }
+    
+    public Operation getOperationIndex(int i) {
+        return this.operations.getOperationIndex(i);
+    }
+    
+    public void createContainers(int trailerIndex) {
+        this.adminData.getVehicle().getTrailers().getTrailerIndex(trailerIndex).createContainers();
+    }
+    
+    public Containers getContainers(int trailerIndex) {
+        return this.adminData.getVehicle().getTrailers().getTrailerIndex(trailerIndex).getContainers();
+    }
+    
+    
+    public int createContainer(int trailerIndex) {
+        return this.adminData.getVehicle().getTrailers().getTrailerIndex(trailerIndex).getContainers().createContainer();
+    }
+    
+    public Container getContainer(int trailerIndex, int containerIndex) {
+        return this.adminData.getVehicle().getTrailers().getTrailerIndex(trailerIndex).getContainers().getContainerIndex(containerIndex);
+    }
+    
+    
+    
+
+    
+    
 }
