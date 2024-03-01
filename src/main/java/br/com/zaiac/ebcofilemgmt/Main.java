@@ -63,7 +63,7 @@ public class Main {
         }
         
         Monitor.diskMonitor = ConfigProperties.getPropertyValue("DISK_MONITOR");
-        Monitor.pingSite = Integer.parseInt(ConfigProperties.getPropertyValue("PING"));                
+        Monitor.pingSite = Integer.valueOf(ConfigProperties.getPropertyValue("PING"));                
         Monitor.siteId = ConfigProperties.getPropertyValue("SITE");
         Monitor.siteId = ConfigProperties.getPropertyValue("SITE");
         Monitor.urlBackEnd = ConfigProperties.getPropertyValue("URL_BACKEND");
@@ -71,7 +71,7 @@ public class Main {
         
         
         try {
-            debugMode = Boolean.parseBoolean(ConfigProperties.getPropertyValue("DEBUG_MODE"));
+            debugMode = Boolean.valueOf(ConfigProperties.getPropertyValue("DEBUG_MODE"));
             if (debugMode) {
                 System.out.println("DEBUG_MODE Ligado");
             } else {
@@ -158,7 +158,7 @@ public class Main {
                     siteSFTPDestination = ConfigProperties.getPropertyValue("SITE_SFTP_DESTINATION");
                     siteSFTPUsername = ConfigProperties.getPropertyValue("SITE_SFTP_USERNAME");
                     siteSFTPPassword = ConfigProperties.getPropertyValue("SITE_SFTP_PASSWORD");
-                    siteSFTPPort = Integer.parseInt(ConfigProperties.getPropertyValue("SITE_SFTP_PORT"));
+                    siteSFTPPort = Integer.valueOf(ConfigProperties.getPropertyValue("SITE_SFTP_PORT"));
                     try {
                         SendFiles.queue(baseDir, moveDir, missingDirectory, siteDestination, siteSFTPDestination, siteSFTPPort, siteSFTPUsername, siteSFTPPassword);
                     } catch (ProcessIncompleteException ex) {

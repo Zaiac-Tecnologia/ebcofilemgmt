@@ -603,19 +603,15 @@ public class MergeFiles {
             
             jb.add("number_of_files", f.listFiles().length - 1);
             
-            int numberOfBytes = 1024;
-            int position = 1024;
+            int numberOfBytes = 4096;
+            int position = 4096;
             
-            for (File file : f.listFiles(new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.toLowerCase().endsWith(".xml") 
-                                || name.toLowerCase().endsWith(".tif") 
-                                || name.toLowerCase().endsWith(".img") 
-                                || name.toLowerCase().endsWith("_ocr.jpg")
-                                || name.toLowerCase().endsWith("s.jpg")
-                                || name.toLowerCase().endsWith(".json"); 
-                    }})) {
+            for (File file : f.listFiles((File dir, String name) -> name.toLowerCase().endsWith(".xml") 
+                    || name.toLowerCase().endsWith(".tif")
+                    || name.toLowerCase().endsWith(".img")
+                    || name.toLowerCase().endsWith("_ocr.jpg")
+                    || name.toLowerCase().endsWith("s.jpg")
+                    || name.toLowerCase().endsWith(".json"))) {
                 jab.add("file_name", file.getName());
                 jab.add("file_size", file.length());
                 jab.add("position", position);
@@ -627,20 +623,16 @@ public class MergeFiles {
             
             
             jb.add("files", ja.build());            
-            int offSet = 1024;
+            int offSet = 4096;
             fileBytesOutput = new byte[numberOfBytes];
             copyBytesAtOffset(fileBytesOutput, jb.build().toString().getBytes(), 0);
             
-            for (File file : f.listFiles(new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.toLowerCase().endsWith(".xml") 
-                                || name.toLowerCase().endsWith(".tif") 
-                                || name.toLowerCase().endsWith(".img") 
-                                || name.toLowerCase().endsWith("_ocr.jpg")
-                                || name.toLowerCase().endsWith("s.jpg")
-                                || name.toLowerCase().endsWith(".json");
-                    }})) {
+            for (File file : f.listFiles((File dir, String name) -> name.toLowerCase().endsWith(".xml") 
+                    || name.toLowerCase().endsWith(".tif")
+                    || name.toLowerCase().endsWith(".img")
+                    || name.toLowerCase().endsWith("_ocr.jpg")
+                    || name.toLowerCase().endsWith("s.jpg")
+                    || name.toLowerCase().endsWith(".json"))) {
                 
                 fileBytes = new byte[(int) file.length()];
                 fis = new FileInputStream(file);
@@ -695,10 +687,14 @@ public class MergeFiles {
         
         File inputFile = new File(file_name);
         RandomAccessFile inputStream;
-        int readLength = 1024;
+        //int readLength = 1024;
+        
+        int readLengthVersion1 = 1024;
+        int readLengthVersion2 = 4096;
         byte[] byteChunkPart;
         JsonReader jsonReader;
-        
+        String jsonDirectory;
+        JsonObject object = null;
         
         try {
             if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Split file " + inputFile.getAbsolutePath() + " started.", 0);
@@ -708,15 +704,28 @@ public class MergeFiles {
         }
         
         try {
-            inputStream = new RandomAccessFile(inputFile, "rw");
-            byteChunkPart = new byte[readLength];
-            inputStream.readFully(byteChunkPart, 0, readLength);
-            String jsonDirectory = new String(byteChunkPart);
+            try {
+                inputStream = new RandomAccessFile(inputFile, "rw");
+                byteChunkPart = new byte[readLengthVersion1];
+                inputStream.readFully(byteChunkPart, 0, readLengthVersion1);
+                jsonDirectory = new String(byteChunkPart);            
+                jsonReader = Json.createReader(new StringReader(jsonDirectory));
+                object = jsonReader.readObject();
+                jsonReader.close();
+            } catch (Exception e1) {
+                try {                    
+                    inputStream = new RandomAccessFile(inputFile, "rw");
+                    byteChunkPart = new byte[readLengthVersion2];
+                    inputStream.readFully(byteChunkPart, 0, readLengthVersion2);
+                    jsonDirectory = new String(byteChunkPart);            
+                    jsonReader = Json.createReader(new StringReader(jsonDirectory));
+                    object = jsonReader.readObject();
+                    jsonReader.close();
+                } catch (Exception e2) {
+                    throw new ProcessIncompleteException("Erro na leitura do Diretorio");
+                }
+            }
             
-            jsonReader = Json.createReader(new StringReader(jsonDirectory));
-            JsonObject object = jsonReader.readObject();
-            jsonReader.close();
-           
             JsonArray array = object.getJsonArray("files");
             for (int i = 0; i < array.size(); i++) {
                 JsonObject x = array.getJsonObject(i);
