@@ -9,6 +9,8 @@ import br.com.zaiac.ebcofilemgmt.tools.Monitor;
 import br.com.zaiac.ebcofilemgmt.tools.SendFiles;
 import br.com.zaiac.ebcofilemgmt.xml.ConvertXmlFile;
 import br.com.zaiac.ebcolibrary.ConfigProperties;
+import br.com.zaiac.ebcolibrary.ConvertXML;
+import br.com.zaiac.ebcolibrary.xml.DataForm;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -21,9 +23,12 @@ public class Main {
         int i;
         String type = "";
         String operation = "";
+        Integer priority = 1;
         
         Boolean isType = false;
         Boolean isOperation = false;
+        Boolean isPriority = false;
+        
         String baseDir;
         String urlIaLocal;
         String keyDir;
@@ -45,12 +50,15 @@ public class Main {
         for (i = 0; i < args.length; i++) {
             if (isType) type = args[i];
             if (isOperation) operation = args[i];
+            if (isPriority) priority = Integer.valueOf(args[i]);
             
             isType = false;
             isOperation = false;
+            isPriority = false;
             
             if (args[i].equalsIgnoreCase("-t")) isType = true;
             if (args[i].equalsIgnoreCase("-o")) isOperation = true;
+            if (args[i].equalsIgnoreCase("-p")) isPriority = true;
         }
         
         File f = new File("config.properties");
@@ -116,6 +124,14 @@ public class Main {
                 Monitor.sendInformationToBackEnd(true);
                 break;
                 
+            case "convertjson":
+                baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
+                DataForm dataForm = ConvertXML.convertXmlToObject(baseDir + "\\" + operation + "\\", operation + ".xml");
+                br.com.zaiac.ebcolibrary.json.fase1.DataForm jsonObject = ConvertXML.createFase1Object(dataForm);
+                String json = ConvertXML.convertObjectToJson(jsonObject);
+                ConvertXML.saveJsonToFile(baseDir + "\\" + operation + "\\", operation + "F1.json", json);                
+                break;
+
             case "convertxml":
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
                 if(xmlConverter.equalsIgnoreCase("CARGO")) {
@@ -194,6 +210,14 @@ public class Main {
                 
                 try {
                     MergeFiles.enqueue(baseDir, operation);
+                } catch (ProcessIncompleteException e) {}
+                break;
+            case "enqueue-priority":
+                baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
+                Monitor.sendInformationToBackEnd(false);
+                
+                try {
+                    MergeFiles.enqueue(baseDir, priority, operation);
                 } catch (ProcessIncompleteException e) {}
                 break;
             case "split":

@@ -11,7 +11,7 @@ public class Verdict {
         return id;
     }
 
-    @XmlAttribute(name="Id")
+    @XmlAttribute(name="Value")
     public void setId(String id) {
         this.id = id;
     }

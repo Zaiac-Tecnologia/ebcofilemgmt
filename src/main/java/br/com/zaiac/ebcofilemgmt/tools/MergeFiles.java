@@ -14,7 +14,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.FilenameFilter;
+//import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
@@ -40,6 +40,18 @@ public class MergeFiles {
         wfbw.close();
     }
     
+    static public synchronized void writeFileToQueue (String queueDirectory, Integer priority, String queueFile) throws IOException {
+        File queuePriorityDirectory = new File(queueDirectory + "\\" + priority);
+        if (!queuePriorityDirectory.exists()) {
+            queuePriorityDirectory.mkdirs();            
+        }
+        BufferedWriter wfbw;
+        wfbw = new BufferedWriter(new FileWriter(new File(queueDirectory + "\\" + priority + "\\" + queueFile), false));
+        wfbw.write("");
+        wfbw.flush();
+        wfbw.close();
+    }
+    
     static public synchronized void writeFileToQueue (String queueDirectory, String queueFile, String processStep) throws IOException {
         BufferedWriter wfbw;
         wfbw = new BufferedWriter(new FileWriter(new File(queueDirectory + "/" + queueFile), false));
@@ -47,6 +59,8 @@ public class MergeFiles {
         wfbw.flush();
         wfbw.close();
     }
+
+    
     
     static public synchronized String readStringFromMissingFile (String missingDirectory, String missingFile) throws IOException {
         BufferedReader rfbw;
@@ -382,6 +396,70 @@ public class MergeFiles {
             writeFileToQueue(queueDirectory.getAbsolutePath(), trkId);
             try {
                 if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Enqueue Source Directory " + trkId + " enqueued successfully", 0);
+            } catch(IOException e) {
+                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                System.exit(10);
+            }
+            
+        } catch (IOException e) {
+            try {
+                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Enqueue Cannot write queue file " + trkId + " to queue directory " + queueDirectory.getAbsolutePath(), 2);
+            } catch(IOException e1) {
+                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                System.exit(10);
+            }
+            throw new ProcessIncompleteException("Cannot write queue file " + trkId + " to queue directory " + queueDirectory.getAbsolutePath());
+        }
+    }
+    
+    public static void enqueue(String baseDir, Integer priority, String trkId) throws ProcessIncompleteException {
+        try {
+            logDirectory = new File("").getCanonicalPath() + "\\\\logs";
+        } catch (IOException e) {
+            System.err.print("Cannot get Local Path for Log Directory");
+            System.exit(10);
+        }
+        
+        Monitor.sendInformationToBackEnd(false);
+        
+        File sourceDirectory = new File(baseDir + "\\\\" + trkId);
+        if (!sourceDirectory.exists()) {
+            try {
+                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Enqueue Source Directory " + sourceDirectory.getAbsolutePath() + " not found", 2);
+                System.exit(10);
+                
+            } catch(IOException e) {
+                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                System.exit(10);
+            }
+        }
+
+        File queueDirectory = null;
+        
+        try {
+            queueDirectory = new File(new File("").getCanonicalPath() + "\\\\queue");
+        } catch (IOException e) {
+            try {
+                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Enqueue Cannot get Local Path for Queue Directory", 2);
+            } catch (IOException e1) {
+                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+            }
+            System.exit(10);
+        }
+        
+        if (!queueDirectory.exists()) {
+            try {
+                LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Enqueue Source Directory " + logDirectory + " not found", 2);
+            } catch(IOException e) {
+                System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+                System.exit(10);
+            }
+        }
+        
+        try {
+            writeFileToQueue(queueDirectory.getAbsolutePath(), priority, trkId);
+            try {
+                if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Enqueue Source Directory " + trkId + " with priority " + priority + " enqueued successfully", 0);
             } catch(IOException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
