@@ -127,7 +127,7 @@ public class Main {
             case "convertjson":
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
                 DataForm dataForm = ConvertXML.convertXmlToObject(baseDir + "\\" + operation + "\\", operation + ".xml");
-                br.com.zaiac.ebcolibrary.json.fase1.DataForm jsonObject = ConvertXML.createFase1Object(dataForm);
+                br.com.zaiac.ebcolibrary.json.fase.DataForm jsonObject = ConvertXML.createFase1Object(dataForm);
                 String json = ConvertXML.convertObjectToJson(jsonObject);
                 ConvertXML.saveJsonToFile(baseDir + "\\" + operation + "\\", operation + "F1.json", json);                
                 break;
