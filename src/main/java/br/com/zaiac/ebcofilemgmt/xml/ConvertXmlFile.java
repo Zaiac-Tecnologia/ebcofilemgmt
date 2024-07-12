@@ -13,6 +13,7 @@ import br.com.zaiac.ebcofilemgmt.xml.classes.processinstructions.EnergyLevel;
 import br.com.zaiac.ebcofilemgmt.xml.classes.processinstructions.InspectionType;
 import br.com.zaiac.ebcofilemgmt.xml.classes.processinstructions.ProcessInstructions;
 import br.com.zaiac.ebcolibrary.LogApp;
+import br.com.zaiac.ebcolibrary.exceptions.WriteLogFileException;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -297,7 +298,7 @@ public class ConvertXmlFile {
                 try {
                     LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Invalid XML File (FormData)", 2);
                     throw new XMLFileException("Invalid XML File");
-                } catch(IOException e) {
+                } catch(WriteLogFileException e) {
                     System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                     System.exit(10);
                 }
@@ -309,7 +310,7 @@ public class ConvertXmlFile {
                 try {
                     LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Invalid XML File (AdminData)", 2);
                     throw new XMLFileException("Invalid XML File");
-                } catch(IOException e) {
+                } catch(WriteLogFileException e) {
                     System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                     System.exit(10);
                 }

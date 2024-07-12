@@ -3,6 +3,7 @@ package br.com.zaiac.ebcofilemgmt.tools;
 import br.com.zaiac.ebcofilemgmt.exception.SendInformationException;
 import br.com.zaiac.ebcofilemgmt.rest.MethodPost;
 import br.com.zaiac.ebcolibrary.LogApp;
+import br.com.zaiac.ebcolibrary.exceptions.WriteLogFileException;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -148,7 +149,7 @@ public class Monitor {
                     
                     try {
                         if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, String.format("Request Start to Backend %s", urlBackEnd), 0);
-                    } catch(IOException e1) {
+                    } catch(WriteLogFileException e1) {
                         System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                         System.exit(10);
                     }            
@@ -172,7 +173,7 @@ public class Monitor {
                     try {
                         if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, String.format("Request Complete to Backend %s", urlBackEnd), 0);
                         if (debugMode) LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, String.format("Sent Information %s", ret.toString()), 0);
-                    } catch(IOException e1) {
+                    } catch(WriteLogFileException e1) {
                         System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                         System.exit(10);
                     }            
@@ -184,7 +185,7 @@ public class Monitor {
         } catch (Exception e) {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, e.toString(), 2);
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }            

@@ -2,8 +2,12 @@
 *.json
 *.exe
 /logs/
-/KeyPair
+/KeyPair/
 *.jar
 *.class
 *.zip
-
+/Output/
+*.log
+*.xml
+/.git-rewrite/t/target/
+/node_modules/

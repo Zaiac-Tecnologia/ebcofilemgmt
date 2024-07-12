@@ -3,6 +3,7 @@ package br.com.zaiac.ebcofilemgmt.cryptography;
 import br.com.zaiac.ebcofilemgmt.exception.ProcessIncompleteException;
 import br.com.zaiac.ebcofilemgmt.tools.Constants;
 import br.com.zaiac.ebcolibrary.LogApp;
+import br.com.zaiac.ebcolibrary.exceptions.WriteLogFileException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -20,8 +21,6 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -90,7 +89,7 @@ public class AsymmetricCryptography {
         
         try {
             LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Encrypt Source file " + input.getAbsolutePath() + " started...", 0);
-        } catch(IOException e) {
+        } catch(WriteLogFileException e) {
             System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
             System.exit(10);
         }
@@ -114,7 +113,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "NoSuchAlgorithmException", 2);
                 throw new ProcessIncompleteException("NoSuchAlgorithmException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }   
@@ -137,7 +136,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Encrypt error getting PrivateKey", 2);
                 throw new ProcessIncompleteException("Encrypt error getting PrivateKey");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }   
@@ -148,7 +147,7 @@ public class AsymmetricCryptography {
         if (output.exists()) {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Encrypt destination file " + output.getAbsolutePath() + " exists. Will be deleted.", 0);
-            } catch(IOException e) {
+            } catch(WriteLogFileException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }            
@@ -181,7 +180,7 @@ public class AsymmetricCryptography {
 
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Encrypt destination file " + output.getAbsolutePath() + " done.", 0);
-            } catch(IOException e) {
+            } catch(WriteLogFileException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -191,7 +190,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Source file " + input.getAbsolutePath() + " deleted.", 0);
                 input.delete();
-            } catch(IOException e) {
+            } catch(WriteLogFileException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -200,7 +199,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Encrypt NoSuchAlgorithmException " + e.toString(), 2);
                 throw new ProcessIncompleteException("NoSuchAlgorithmException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -209,7 +208,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Encrypt FileNotFoundException " + e.toString(), 2);
                 throw new ProcessIncompleteException("FileNotFoundException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -217,7 +216,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Encrypt InvalidKeyException " + e.toString(), 2);
                 throw new ProcessIncompleteException("InvalidKeyException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -226,7 +225,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Encrypt NoSuchPaddingException "  + e.toString(), 2);
                 throw new ProcessIncompleteException("NoSuchPaddingException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -235,7 +234,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Encrypt IOException "  + e.toString(), 2);
                 throw new ProcessIncompleteException("IOException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -244,7 +243,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Encrypt IllegalBlockSizeException "  + e.toString(), 2);
                 throw new ProcessIncompleteException("IllegalBlockSizeException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -253,7 +252,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Encrypt InvalidAlgorithmParameterException "  + e.toString(), 2);
                 throw new ProcessIncompleteException("InvalidAlgorithmParameterException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -262,7 +261,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Encrypt BadPaddingException "  + e.toString(), 2);
                 throw new ProcessIncompleteException("BadPaddingException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -296,7 +295,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Dencrypt error getting PrivateKey", 2);
                 throw new ProcessIncompleteException("Exception");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }   
@@ -306,7 +305,7 @@ public class AsymmetricCryptography {
         if (output.exists()) {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Dencrypt destination file " + output.getAbsolutePath() + " exists. Will be deleted.", 2);
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }   
@@ -344,7 +343,7 @@ public class AsymmetricCryptography {
             out.close();
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Dencrypt destination file " + output.getAbsolutePath() + " done.", 0);
-            } catch(IOException e) {
+            } catch(WriteLogFileException e) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -354,7 +353,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Dencrypt NoSuchAlgorithmException " + e.toString(), 2);
                 throw new ProcessIncompleteException("NoSuchAlgorithmException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -363,7 +362,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Dencrypt FileNotFoundException " + e.toString(), 2);
                 throw new ProcessIncompleteException("FileNotFoundException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -371,7 +370,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Dencrypt InvalidKeyException " + e.toString(), 2);
                 throw new ProcessIncompleteException("InvalidKeyException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -380,7 +379,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Dencrypt NoSuchPaddingException "  + e.toString(), 2);
                 throw new ProcessIncompleteException("NoSuchPaddingException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -389,7 +388,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Dencrypt IOException "  + e.toString(), 2);
                 throw new ProcessIncompleteException("IOException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -398,7 +397,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Dencrypt IllegalBlockSizeException "  + e.toString(), 2);
                 throw new ProcessIncompleteException("IllegalBlockSizeException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -407,7 +406,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Dencrypt InvalidAlgorithmParameterException "  + e.toString(), 2);
                 throw new ProcessIncompleteException("InvalidAlgorithmParameterException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
@@ -416,7 +415,7 @@ public class AsymmetricCryptography {
             try {
                 LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Dencrypt BadPaddingException "  + e.toString(), 2);
                 throw new ProcessIncompleteException("BadPaddingException");
-            } catch(IOException e1) {
+            } catch(WriteLogFileException e1) {
                 System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
                 System.exit(10);
             }
