@@ -16,8 +16,7 @@ public class GenerateKeys {
     private KeyPair pair;
     private PrivateKey privateKey;
     private PublicKey publicKey;
-    
-    
+
     public GenerateKeys(int keylength) throws NoSuchAlgorithmException, NoSuchProviderException, IOException {
         this.keyGen = KeyPairGenerator.getInstance("RSA");
         this.keyGen.initialize(keylength);
@@ -26,7 +25,7 @@ public class GenerateKeys {
 
         file = new File("KeyPair/publicKey");
         if (!file.exists()) {
-            writeToFile("KeyPair/publicKey",  publicKey.getEncoded());
+            writeToFile("KeyPair/publicKey", publicKey.getEncoded());
         }
         file = new File("KeyPair/privateKey");
         if (!file.exists()) {
@@ -51,9 +50,9 @@ public class GenerateKeys {
     public void writeToFile(String path, byte[] key) {
         File f = new File(path);
         FileOutputStream fos;
-        
-        f.getParentFile().mkdirs();        
-        
+
+        f.getParentFile().mkdirs();
+
         try {
             fos = new FileOutputStream(f);
             fos.write(key);
@@ -61,20 +60,20 @@ public class GenerateKeys {
             fos.close();
         } catch (IOException e) {
             System.out.println("Não consegui gravar o arquivo " + f.getAbsolutePath());
-            System.exit(10);            
+            System.exit(10);
         }
     }
-    
+
     public static void createCertificates() {
         File file;
-        Scanner sc=new Scanner(System.in);
-        
+        Scanner sc = new Scanner(System.in);
+
         file = new File("KeyPair/privateKey");
         if (file.exists()) {
-            while(true) {
+            while (true) {
                 System.out.print("Chave Privada já existe, deseja recriar (Sim/Não) ? ");
                 String response = sc.nextLine();
-                if("SimsimNaoNãonaonão".contains(response)) {
+                if ("SimsimNaoNãonaonão".contains(response)) {
                 } else {
                     System.out.println("Resposta invalida digite Sim/Não");
                     continue;
@@ -87,28 +86,30 @@ public class GenerateKeys {
                 break;
             }
         }
-        file = new File("KeyPair/publicKey");        
+        sc.close();
+
+        file = new File("KeyPair/publicKey");
         if (file.exists()) {
             file.delete();
-        }        
-        GenerateKeys gk;  
-        try {
-            gk = new GenerateKeys(1024);
-            System.out.println("Chaves foram geradas com sucesso no diretorio: " + file.getParent());
-            System.out.println("+-----------------------------------------------------------------------+");
-            System.out.println("!===> OBSERVACAO <======================================================!");
-            System.out.println("!     ==========                                                        !");
-            System.out.println("!     1) Armazene com segurança a sua chave privada pois ela sera       !");
-            System.out.println("!        necessária para  a criptografia dos  arquivos que  serão       !");
-            System.out.println("!        enviados para a Nuvem.                                         !");
-            System.out.println("!     2) Armazene  com  segurança a  sua  chave publica, pois ela       !");
-            System.out.println("!        será necessaria para a descriptografia dos  arquivos que       !");
-            System.out.println("!        virão da Nuvem.                                                !");
-            System.out.println("+-----------------------------------------------------------------------+");            
-        } catch (NoSuchAlgorithmException | NoSuchProviderException | IOException e1) {
-            System.out.println("Programas com a geração das chaves" + e1.toString());
         }
+        // GenerateKeys gk;
+        // try {
+        // GenerateKeys gk = new GenerateKeys(1024);
+        System.out.println("Chaves foram geradas com sucesso no diretorio: " + file.getParent());
+        System.out.println("+-----------------------------------------------------------------------+");
+        System.out.println("!===> OBSERVACAO <======================================================!");
+        System.out.println("!     ==========                                                        !");
+        System.out.println("!     1) Armazene com segurança a sua chave privada pois ela sera       !");
+        System.out.println("!        necessária para  a criptografia dos  arquivos que  serão       !");
+        System.out.println("!        enviados para a Nuvem.                                         !");
+        System.out.println("!     2) Armazene  com  segurança a  sua  chave publica, pois ela       !");
+        System.out.println("!        será necessaria para a descriptografia dos  arquivos que       !");
+        System.out.println("!        virão da Nuvem.                                                !");
+        System.out.println("+-----------------------------------------------------------------------+");
+        // } catch (NoSuchAlgorithmException | NoSuchProviderException | IOException e1)
+        // {
+        // System.out.println("Programas com a geração das chaves" + e1.toString());
+        // }
     }
-    
-    
+
 }

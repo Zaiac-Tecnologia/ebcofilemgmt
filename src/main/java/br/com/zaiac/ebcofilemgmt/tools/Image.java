@@ -1,5 +1,22 @@
 package br.com.zaiac.ebcofilemgmt.tools;
 
+//import static org.bytedeco.opencv.opencv_core.CV_16UC1;
+//import static org.bytedeco.opencv.global.opencv_core.CV_16UC1;
+import static org.bytedeco.opencv.global.opencv_core.CV_8UC1;
+//import static org.bytedeco.opencv.global.opencv_core.split;
+//import org.bytedeco.opencv.opencv_core.im;
+//import org.bytedeco.opencv.opencv_imgcodecs.imread;
+
+//im//port static org.bytedeco.opencv.global.opencv_core.imre
+import static org.bytedeco.opencv.global.opencv_imgcodecs.IMREAD_COLOR;
+//import static org.bytedeco.opencv.global.opencv_imgcodecs.IMREAD_UNCHANGED;
+import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
+import static org.bytedeco.opencv.global.opencv_imgcodecs.imwrite;
+
+//import static org.bytedeco.opencv.global.opencv_imgproc.COLOR_BGR2GRAY;
+//import static org.bytedeco.opencv.global.opencv_imgproc.cvtColor;
+//import static org.bytedeco.opencv.global.opencv_imgproc.equalizeHist;
+
 import br.com.zaiac.ebcolibrary.LogApp;
 import br.com.zaiac.ebcolibrary.exceptions.WriteLogFileException;
 import java.awt.Graphics2D;
@@ -12,6 +29,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+//import java.nio.ShortBuffer;
 import java.nio.file.Files;
 import java.util.Base64;
 import javax.imageio.ImageIO;
@@ -26,9 +44,15 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+//import org.bytedeco.javacpp.ShortPointer;
+import org.bytedeco.javacpp.indexer.UByteIndexer;
+//import org.bytedeco.javacpp.indexer.UShortIndexer;
 import org.bytedeco.opencv.opencv_core.Mat;
 
+//import org.bytedeco.opencv.opencv_core.MatVector;
+
 public class Image {
+
     private static String logDirectory;
 
     public static BufferedImage toBufferedImage(Mat mat) {
@@ -47,12 +71,10 @@ public class Image {
     }
 
     public static byte[] toByteArray(BufferedImage bi, String format) throws IOException {
-
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ImageIO.write(bi, format, baos);
         byte[] bytes = baos.toByteArray();
         return bytes;
-
     }
 
     public static BufferedImage convert(BufferedImage src, int bufImgType) {
@@ -63,6 +85,48 @@ public class Image {
         return img;
     }
 
+    public static void convertJpegRgbToTiff(String baseDir, String fileName, String targetFileName) {
+        File file = new File(baseDir, fileName + ".jpg");
+        if (!file.exists()) {
+            System.out.println("Arquivo " + file.getAbsolutePath() + " Não existe");
+            System.exit(10);
+        }
+        Mat imageRGB = imread(file.getAbsolutePath(), IMREAD_COLOR);
+
+        if (imageRGB.empty()) {
+            System.out.println("OPS!!!!! Erro Nao carregado");
+            System.exit(10);
+        }
+
+        if (imageRGB.channels() != 3) {
+            System.out.println("OPS!!!!! Erro Nao é RGB");
+            System.exit(10);
+        }
+        Mat imageGray = new Mat(imageRGB.size(), CV_8UC1); // 8-bit, 1 channel
+
+        // Step 3: Use MatIndexer for pixel access
+        UByteIndexer rgbIndexer = imageRGB.createIndexer();
+        UByteIndexer grayIndexer = imageGray.createIndexer();
+
+        // Step 4: Loop through each pixel in the image and compute grayscale value
+        for (int y = 0; y < imageRGB.rows(); y++) {
+            for (int x = 0; x < imageRGB.cols(); x++) {
+                // Extract the RGB values (BGR format in OpenCV)
+                int b = rgbIndexer.get(y, x, 0) & 0xFF; // Blue
+                int g = rgbIndexer.get(y, x, 1) & 0xFF; // Green
+                int r = rgbIndexer.get(y, x, 2) & 0xFF; // Red
+
+                // Apply the grayscale formula
+                int gray = (int) (0.299 * r + 0.587 * g + 0.114 * b);
+
+                // Assign the computed grayscale value to the grayscale image
+                grayIndexer.put(y, x, (byte) gray);
+            }
+        }
+
+        imwrite(baseDir + "\\" + targetFileName + ".tif", imageGray);
+    }
+
     public static void convertTiffToJpeg(String baseDir, String fileName) {
         File file = new File(baseDir + "\\" + fileName, fileName + "S.tif");
         if (!file.exists()) {
@@ -70,13 +134,12 @@ public class Image {
             System.exit(10);
         }
         try {
-            System.out.println("Continuar processo");
             byte[] fileContent = Files.readAllBytes(file.toPath());
             InputStream is = new ByteArrayInputStream(fileContent);
             BufferedImage bufferedImage = ImageIO.read(is);
 
             bufferedImage = convert(bufferedImage, BufferedImage.TYPE_INT_RGB);
-            byte[] b = toByteArray(bufferedImage, "jpg");
+            // byte[] b = toByteArray(bufferedImage, "jpg");
         } catch (IOException e) {
             System.out.println("OPS!!!!! Erro");
         }
@@ -92,10 +155,14 @@ public class Image {
         }
 
         try {
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Cheio/Vazio analyse started to " + trkId + "...",
+            LogApp.writeLineToFile(
+                    logDirectory,
+                    Constants.LOGFILE,
+                    "Cheio/Vazio analyse started to " + trkId + "...",
                     0);
         } catch (WriteLogFileException e) {
-            System.err.println("Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
+            System.err.println(
+                    "Cannot write log file Directory " + logDirectory + " file name " + Constants.LOGFILE);
             System.exit(10);
         }
         System.out.println("BaseDir " + baseDir);
@@ -111,8 +178,7 @@ public class Image {
         String encodedString = Base64.getEncoder().encodeToString(fileContent);
 
         JsonObjectBuilder job = Json.createObjectBuilder();
-        job.add("imgf", trkId + "S.tif")
-                .add("encoded", encodedString);
+        job.add("imgf", trkId + "S.tif").add("encoded", encodedString);
 
         JsonObject jo = job.build();
 
@@ -128,11 +194,17 @@ public class Image {
             BufferedWriter writer = new BufferedWriter(new FileWriter(fileia));
             writer.write(apiOutput);
             writer.close();
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE,
-                    "Cheio/Vazio Response for " + trkId + " " + apiOutput, 0);
+            LogApp.writeLineToFile(
+                    logDirectory,
+                    Constants.LOGFILE,
+                    "Cheio/Vazio Response for " + trkId + " " + apiOutput,
+                    0);
         } catch (Exception e) {
-            LogApp.writeLineToFile(logDirectory, Constants.LOGFILE, "Cheio/Vazio API not Available for " + trkId, 1);
+            LogApp.writeLineToFile(
+                    logDirectory,
+                    Constants.LOGFILE,
+                    "Cheio/Vazio API not Available for " + trkId,
+                    1);
         }
     }
-
 }
