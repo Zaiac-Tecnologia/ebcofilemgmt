@@ -6,12 +6,12 @@ import javax.xml.bind.annotation.XmlValue;
 public class Verdict {
     private String value;
     private String id;
-    
+
     public String getId() {
         return id;
     }
 
-    @XmlAttribute(name="Id")
+    @XmlAttribute(name = "Value")
     public void setId(String id) {
         this.id = id;
     }
@@ -24,15 +24,15 @@ public class Verdict {
     public void setValue(String value) {
         this.value = value;
     }
-    
+
     public Verdict(String id, String value) {
         this.value = value;
         this.id = id;
     }
+
     public Verdict() {
-        this.value = "";
-        this.id = id;
+        this.value = null;
+        this.id = null;
     }
-    
-    
+
 }

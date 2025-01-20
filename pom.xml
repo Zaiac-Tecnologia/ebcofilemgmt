@@ -22,50 +22,32 @@
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.14</version>
+            <version>1.17.1</version>
             <type>jar</type>
         </dependency>
         
         <dependency>
           <groupId>org.bytedeco</groupId>
           <artifactId>javacv-platform</artifactId>
-          <version>1.5.7</version>
+          <version>1.5.3</version>
         </dependency> 
-        
+
         <dependency>
           <groupId>br.com.zaiac</groupId>
           <artifactId>ebcolibrary</artifactId>
-          <version>1.0</version>
+          <version>2.0</version>
         </dependency> 
         
-        
-<!--
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>opencv</artifactId>
-            <version>4.5.5-1.5.7</version>
-            <type>jar</type>
-        </dependency>
--->
-<!--        
-        <dependency>
-            <groupId>javax.json</groupId>
-            <artifactId>javax.json-api</artifactId>
-            <version>1.1.4</version>
-            <type>jar</type>
-        </dependency>
--->        
         <dependency>
           <groupId>org.glassfish</groupId>
           <artifactId>javax.json</artifactId>
           <version>1.1.4</version>
         </dependency>        
         
-        
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.13</version>
+            <version>4.5.14</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -77,7 +59,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.12.3</version>
+            <version>2.13.5</version>
             <type>jar</type>
         </dependency>
         <dependency>
@@ -88,17 +70,16 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.1</version>
+            <version>3.16.0</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.6</version>
+            <version>2.16.1</version>
             <type>jar</type>
         </dependency>
         
-<!-- https://mvnrepository.com/artifact/com.google.cloud/google-cloud-storage -->
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
@@ -124,7 +105,7 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20220320</version>
+            <version>20240303</version>
             <type>jar</type>
         </dependency>
     </dependencies>
@@ -200,6 +181,7 @@
                     </plugin>     
                     <plugin>
                       <artifactId>maven-antrun-plugin</artifactId>
+                      <version>3.0.0</version>
                       <executions>
                         <execution>
                           <phase>test</phase>
@@ -207,11 +189,11 @@
                             <goal>run</goal>
                           </goals>
                           <configuration>
-                            <tasks>
+                            <target>
                               <delete file="${project.build.outputDirectory}/config.properties"/>
                               <copy file="${basedir}/config.pre.properties"
                                     tofile="${basedir}/target/config.properties"/>
-                            </tasks>
+                            </target>
                           </configuration>
                         </execution>
                       </executions>
@@ -297,11 +279,11 @@
                             <goal>run</goal>
                           </goals>
                           <configuration>
-                            <tasks>
+                            <target>
                               <delete file="${project.build.outputDirectory}/config.properties"/>
                               <copy file="${basedir}/config.dev.properties"
                                     tofile="${basedir}/target/config.properties"/>
-                            </tasks>
+                            </target>
                           </configuration>
                         </execution>
                       </executions>
@@ -407,11 +389,11 @@
                             <goal>run</goal>
                           </goals>
                           <configuration>
-                            <tasks>
+                            <target>
                               <delete file="${project.build.outputDirectory}/config.properties"/>
                               <copy file="${basedir}/config.hom.properties"
                                     tofile="${basedir}/target/config.properties"/>
-                            </tasks>
+                            </target>
                           </configuration>
                         </execution>
                       </executions>
