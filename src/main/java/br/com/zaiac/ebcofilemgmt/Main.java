@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Main {
-    private static final String version = "1.1.20";
+    private static final String version = "1.3.1";
 
     public static void main(String[] args) throws IOException {
         int i;
@@ -138,17 +138,6 @@ public class Main {
                         String.format("File %s updated sucessfully", fEbcorquestrator_directory.getAbsolutePath()));
                 System.exit(0);
             }
-            scanner = ConfigProperties.getPropertyValue("SCANNER");
-            if (scanner == null || scanner.isEmpty()) {
-                System.out.println("Invalid scanner");
-                System.exit(1);
-            }
-
-            if ((scanner.equalsIgnoreCase("SMITHS")) || (scanner.equalsIgnoreCase("NUCHTECH"))) {
-            } else {
-                System.out.println("Invalid scanner");
-                System.exit(1);
-            }
 
         }
 
@@ -158,6 +147,16 @@ public class Main {
         Monitor.siteId = ConfigProperties.getPropertyValue("SITE");
         Monitor.urlBackEnd = ConfigProperties.getPropertyValue("URL_BACKEND");
         Monitor.sourceSite = ConfigProperties.getPropertyValue("SOURCE_SITE");
+
+        scanner = ConfigProperties.getPropertyValue("SCANNER");
+        if (scanner == null || scanner.isEmpty()) {
+            System.out.println("Invalid scanner");
+            System.exit(1);
+        } else if ((scanner.equalsIgnoreCase("SMITHS")) || (scanner.equalsIgnoreCase("NUCHTECH"))) {
+        } else {
+            System.out.println("Invalid scanner");
+            System.exit(1);
+        }
 
         try {
             debugMode = Boolean.valueOf(ConfigProperties.getPropertyValue("DEBUG_MODE"));

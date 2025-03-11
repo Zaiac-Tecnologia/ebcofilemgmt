@@ -14,6 +14,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -36,6 +37,7 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
@@ -807,7 +809,7 @@ public class MergeFiles {
             }
         } catch (
 
-        WriteLogFileException e) {
+                WriteLogFileException e) {
             e.printStackTrace();
             System.exit(10);
         } catch (Exception e) {
@@ -1510,9 +1512,9 @@ public class MergeFiles {
     public static boolean checkAllNeedFiles(File[] filesCopy, String dirTruckCurrent) {
         boolean img = false;
         boolean xml = false;
-        boolean jpeg = false;
+        // boolean jpeg = false;
         boolean tif = false;
-        boolean stampJpeg = false;
+        //boolean stampJpeg = false;
 
         for (File fileC : filesCopy) {
             if (fileC.isDirectory()) {
@@ -1530,23 +1532,19 @@ public class MergeFiles {
             if (filename.endsWith(".xml")) {
                 xml = true;
             }
-            if (filename.endsWith("s_stamp.jpg")) {
-                stampJpeg = true;
-            }
-            if (filename.endsWith("s.jpg")) {
-                jpeg = true;
-            }
+            //if (filename.endsWith("s_stamp.jpg")) {
+            //    stampJpeg = true;
+            //}
+            // if (filename.endsWith("s.jpg")) {
+            // jpeg = true;
+            // }
         }
         // System.out.println(
         // "trk" + dirTruckCurrent + "img: " + img + " xml: " + xml + " jpeg: " + jpeg +
         // " tif: " + tif
         // + " stampJpeg: " + stampJpeg);
 
-        if (img && xml && stampJpeg && jpeg && tif) {
-            return true;
-        } else {
-            return false;
-        }
+        return img && xml /*&& stampJpeg*/ && tif;
     }
 
     public static boolean checkAllNeedFilesNuchtech(File[] filesCopy, String dirTruckCurrent) {
