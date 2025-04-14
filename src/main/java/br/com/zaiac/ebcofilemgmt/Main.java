@@ -14,14 +14,45 @@ import br.com.zaiac.ebcolibrary.ConfigProperties;
 import br.com.zaiac.ebcolibrary.ConvertXML;
 import br.com.zaiac.ebcolibrary.Util;
 import br.com.zaiac.ebcolibrary.exceptions.WriteLogFileException;
-import br.com.zaiac.ebcolibrary.xml.DataForm;
+import br.com.zaiac.ebcolibrary.xml.smiths.DataForm;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 
+/**
+ * ?+------------------------------------------------------------------------+
+ * ?|all.bat*****************************************************************|
+ * *|******Faz o processo completo criar .ebco gerar o pie e enviar**********|
+ * ?|convertjpegtotif.bat****************************************************|
+ * *|******Converte o arquivo .jpg para .tif*********************************|
+ * ?|convertjson.bat*********************************************************|
+ * *|******Converte o arquivo .xml para .json********************************|
+ * ?|convertxml.bat**********************************************************|
+ * *|******Converte o arquivo .xml para CARGO********************************|
+ * ?|encript.bat*************************************************************|
+ * *|******Gera o arquivo .pie***********************************************|
+ * ?|enqueue.bat*************************************************************|
+ * *|******Enfileira para enviar*********************************************|
+ * ?|enqueueWithPriority.bat*************************************************|
+ * ?|ia.bat******************************************************************|
+ * *|******Envia para o IA Local*********************************************|
+ * ?|merge.bat***************************************************************|
+ * *|******Gerar o arquivo .ebco ********************************************|
+ * ?|monitor.bat*************************************************************|
+ * *|******Envia informações para o backend**********************************|
+ * ?|movefiles.bat***********************************************************|
+ * ?|queue.bat***************************************************************|
+ * *|******Envia os arquivos enfileirados************************************|
+ * ?|sendpie.bat*************************************************************|
+ * *|******Envia o arquivo .pie para a Cloud da Google***********************|
+ * ?|version.bat*************************************************************|
+ * *|Mostra a versão do Programa*********************************************|
+ * ?+------------------------------------------------------------------------+
+ */
+
 public class Main {
-    private static final String version = "1.1.20";
+    private static final String version = "1.4";
 
     public static void main(String[] args) throws IOException {
         int i;
@@ -50,12 +81,13 @@ public class Main {
         String siteSFTPDestination;
         String siteSFTPUsername;
         String siteSFTPPassword;
+        String algoritimo;
         Integer siteSFTPPort;
         Boolean debugMode;
         String xmlConverter;
         String ebcorquestrator_directory;
 
-        Boolean iaLocalAvailable;
+        Boolean iaLocalAvailable = false;
 
         for (i = 0; i < args.length; i++) {
             if (isType)
@@ -138,17 +170,6 @@ public class Main {
                         String.format("File %s updated sucessfully", fEbcorquestrator_directory.getAbsolutePath()));
                 System.exit(0);
             }
-            scanner = ConfigProperties.getPropertyValue("SCANNER");
-            if (scanner == null || scanner.isEmpty()) {
-                System.out.println("Invalid scanner");
-                System.exit(1);
-            }
-
-            if ((scanner.equalsIgnoreCase("SMITHS")) || (scanner.equalsIgnoreCase("NUCHTECH"))) {
-            } else {
-                System.out.println("Invalid scanner");
-                System.exit(1);
-            }
 
         }
 
@@ -158,6 +179,25 @@ public class Main {
         Monitor.siteId = ConfigProperties.getPropertyValue("SITE");
         Monitor.urlBackEnd = ConfigProperties.getPropertyValue("URL_BACKEND");
         Monitor.sourceSite = ConfigProperties.getPropertyValue("SOURCE_SITE");
+
+        scanner = ConfigProperties.getPropertyValue("SCANNER");
+        if (scanner == null || scanner.isEmpty()) {
+            System.out.println("Invalid scanner");
+            System.exit(1);
+        } else if ((scanner.equalsIgnoreCase("SMITHS")) || (scanner.equalsIgnoreCase("NUCHTECH"))) {
+        } else {
+            System.out.println("Invalid scanner");
+            System.exit(1);
+        }
+
+        algoritimo = ConfigProperties.getPropertyValue("ALGORITIMO");
+        if (scanner == null || scanner.isEmpty()) {
+            System.out.println("Invalid algoritimo");
+            System.exit(1);
+        } else if (!("SANTOSBRASIL.JBS".contains(algoritimo))) {
+            System.out.println("Invalid algorithm");
+            System.exit(1);
+        }
 
         try {
             debugMode = Boolean.valueOf(ConfigProperties.getPropertyValue("DEBUG_MODE"));
@@ -206,12 +246,18 @@ public class Main {
                 break;
             case "convertjson":
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
-                DataForm dataForm = ConvertXML.convertXmlToObject(
-                        baseDir + "\\" + operation + "\\",
-                        operation + ".xml");
-                br.com.zaiac.ebcolibrary.json.fase.DataForm jsonObject = ConvertXML.createFaseObject(dataForm);
-                String json = ConvertXML.convertObjectToJson(jsonObject);
-                ConvertXML.saveJsonToFile(baseDir + "\\" + operation + "\\", operation + "F1.json", json);
+                if (algoritimo.equals("SANTOSBRASIL")) {
+                    DataForm dataForm = ConvertXML.convertSmitsXmlToObject(
+                            baseDir + "\\" + operation + "\\",
+                            operation + ".xml");
+                    br.com.zaiac.ebcolibrary.json.smiths.santosbrasil.DataForm jsonObject = ConvertXML
+                            .createFaseObjectAlgoritimoSANTOSBRASIL(dataForm);
+                    String json = ConvertXML.convertObjectToJson(jsonObject);
+                    ConvertXML.saveJsonToFile(baseDir + "\\" + operation + "\\", operation + "F1.json", json);
+                } else {
+                    System.out.println("Invalid algorithm");
+                    System.exit(1);
+                }
                 break;
             case "convertxml":
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
@@ -226,13 +272,14 @@ public class Main {
                 keyDir = ConfigProperties.getPropertyValue("KEYPAIR_DIRECTORY");
                 moveDir = ConfigProperties.getPropertyValue("MOVE_DIRECTORY");
                 urlIaLocal = ConfigProperties.getPropertyValue("URL_IA_LOCAL");
+                iaLocalAvailable = Boolean.getBoolean(ConfigProperties.getPropertyValue("IA_LOCAL_AVAILABLE"));
                 GoogleApplicationCredentials = ConfigProperties.getPropertyValue("GOOGLE_APPLICATION_CREDENTIALS");
                 // scanner = ConfigProperties.getPropertyValue("SCANNER");
 
                 Monitor.sendInformationToBackEnd(false);
 
                 try {
-                    Image.getImageCheioVazio(baseDir, urlIaLocal, operation);
+                    Image.getImageCheioVazio(baseDir, urlIaLocal, iaLocalAvailable, operation);
                     MergeFiles.merge(baseDir, operation, scanner);
                     AsymmetricCryptography.encryptFile(baseDir, keyDir, operation);
                     SendFiles.uploadObject(
@@ -306,7 +353,6 @@ public class Main {
                             googleCredentials,
                             scanner);
                 }
-
                 break;
             case "merge":
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
@@ -396,7 +442,7 @@ public class Main {
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
                 urlIaLocal = ConfigProperties.getPropertyValue("URL_IA_LOCAL");
                 try {
-                    Image.getImageCheioVazio(baseDir, urlIaLocal, operation);
+                    Image.getImageCheioVazio(baseDir, urlIaLocal, iaLocalAvailable, operation);
                 } catch (WriteLogFileException e) {
                 }
                 break;

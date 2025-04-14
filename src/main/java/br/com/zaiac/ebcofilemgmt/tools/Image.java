@@ -145,8 +145,13 @@ public class Image {
         }
     }
 
-    public static void getImageCheioVazio(String baseDir, String urlIaLocal, String trkId)
+    public static void getImageCheioVazio(String baseDir, String urlIaLocal, Boolean iaLocalAvailable, String trkId)
             throws IOException, WriteLogFileException {
+
+        if (!iaLocalAvailable) {
+            return;
+        }
+
         try {
             logDirectory = new File("").getCanonicalPath() + "\\\\logs";
         } catch (IOException e) {

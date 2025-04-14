@@ -389,11 +389,11 @@ public class SendFiles {
 
             String yearMonth = fileName.substring(0, 6);
             String yearMonthDay = fileName.substring(0, 8);
-            String siteId = fileName.substring(8, 14);
+            // String siteId = fileName.substring(8, 14);
             String targetDirNameLevel1 = "./" + yearMonth;
             String targetDirNameLevel2 = targetDirNameLevel1 + "/" + yearMonthDay;
             String targetDirNameLevel3 = targetDirNameLevel2 + "/" + fileName;
-            SftpATTRS attrs = null;
+            SftpATTRS attrs;
 
             ChannelSftp sftp;
 

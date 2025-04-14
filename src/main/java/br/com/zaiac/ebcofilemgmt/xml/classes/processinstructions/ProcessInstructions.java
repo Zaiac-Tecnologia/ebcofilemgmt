@@ -1,6 +1,6 @@
 package br.com.zaiac.ebcofilemgmt.xml.classes.processinstructions;
 
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlElement;
 
 public class ProcessInstructions {
     private InspectionType inspectionType;

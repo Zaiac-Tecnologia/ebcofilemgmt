@@ -14,6 +14,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -36,6 +37,7 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
@@ -82,11 +84,6 @@ public class MergeFiles {
                     "Cannot write missing file " + queueDirectory + "/" + queueFile + " with process step "
                             + processStep);
         }
-        // wfbw = new BufferedWriter(new FileWriter(new File(queueDirectory + "/" +
-        // queueFile), false));
-        // wfbw.write(processStep);
-        // wfbw.flush();
-        // wfbw.close();
     }
 
     public static synchronized String readStringFromMissingFile(String missingDirectory, String missingFile)
@@ -231,7 +228,7 @@ public class MergeFiles {
 
                     if (iaLocalAvailable) {
                         try {
-                            Image.getImageCheioVazio(baseDir, urlIaLocal, trkId);
+                            Image.getImageCheioVazio(baseDir, urlIaLocal, iaLocalAvailable, trkId);
                         } catch (IOException e) {
                             try {
                                 LogApp.writeLineToFile(
@@ -730,7 +727,7 @@ public class MergeFiles {
 
             if (iaLocalAvailable) {
                 try {
-                    Image.getImageCheioVazio(baseDir, urlIaLocal, trkId);
+                    Image.getImageCheioVazio(baseDir, urlIaLocal, iaLocalAvailable, trkId);
                 } catch (IOException e) {
                     System.err.println(e.toString());
                     LogApp.writeLineToFile(
@@ -821,9 +818,9 @@ public class MergeFiles {
 
     /*
      * +---------------------------------------------------------------------------+
-     * | |
-     * | Enqueue to Process from the Service |
-     * | |
+     * |************************************************************************** |
+     * |************************* Enqueue to Process from the Service************* |
+     * |************************************************************************** |
      * +---------------------------------------------------------------------------+
      */
 
@@ -1166,9 +1163,9 @@ public class MergeFiles {
 
     /*
      * +---------------------------------------------------------------------------+
-     * | |
-     * | Merge Files into a ebco file |
-     * | |
+     * |************************************************************************** |
+     * |******************* Merge Files into a ebco file************************** |
+     * |************************************************************************** |
      * +---------------------------------------------------------------------------+
      */
 
@@ -1351,9 +1348,9 @@ public class MergeFiles {
 
     /*
      * +---------------------------------------------------------------------------+
-     * | |
-     * | Extract Files into a ebco file |
-     * | |
+     * |************************************************************************** |
+     * |*********************** Extract Files into a ebco file******************** |
+     * |************************************************************************** |
      * +---------------------------------------------------------------------------+
      */
 
@@ -1510,9 +1507,9 @@ public class MergeFiles {
     public static boolean checkAllNeedFiles(File[] filesCopy, String dirTruckCurrent) {
         boolean img = false;
         boolean xml = false;
-        boolean jpeg = false;
+        // boolean jpeg = false;
         boolean tif = false;
-        boolean stampJpeg = false;
+        // boolean stampJpeg = false;
 
         for (File fileC : filesCopy) {
             if (fileC.isDirectory()) {
@@ -1530,23 +1527,19 @@ public class MergeFiles {
             if (filename.endsWith(".xml")) {
                 xml = true;
             }
-            if (filename.endsWith("s_stamp.jpg")) {
-                stampJpeg = true;
-            }
-            if (filename.endsWith("s.jpg")) {
-                jpeg = true;
-            }
+            // if (filename.endsWith("s_stamp.jpg")) {
+            // stampJpeg = true;
+            // }
+            // if (filename.endsWith("s.jpg")) {
+            // jpeg = true;
+            // }
         }
         // System.out.println(
         // "trk" + dirTruckCurrent + "img: " + img + " xml: " + xml + " jpeg: " + jpeg +
         // " tif: " + tif
         // + " stampJpeg: " + stampJpeg);
 
-        if (img && xml && stampJpeg && jpeg && tif) {
-            return true;
-        } else {
-            return false;
-        }
+        return img && xml /* && stampJpeg */ && tif;
     }
 
     public static boolean checkAllNeedFilesNuchtech(File[] filesCopy, String dirTruckCurrent) {
@@ -1584,8 +1577,8 @@ public class MergeFiles {
     public static boolean checkAllNeedFilesEbco(File[] filesCopy, String dirTruckCurrent) {
         boolean img = false;
         boolean xml = false;
-        boolean jpeg = false;
-        boolean stampJpeg = false;
+        // boolean jpeg = false;
+        // boolean stampJpeg = false;
 
         for (File fileC : filesCopy) {
             if (fileC.isDirectory()) {
@@ -1600,21 +1593,17 @@ public class MergeFiles {
             if (filename.endsWith(".xml")) {
                 xml = true;
             }
-            if (filename.endsWith("s_stamp.jpg")) {
-                stampJpeg = true;
-            }
-            if (filename.endsWith("s.jpg")) {
-                jpeg = true;
-            }
+            // if (filename.endsWith("s_stamp.jpg")) {
+            // stampJpeg = true;
+            // }
+            // if (filename.endsWith("s.jpg")) {
+            // jpeg = true;
+            // }
         }
         // System.out.println("img: " + img + " xml: " + xml + " jpeg: " + jpeg + "
         // stampJpeg: " + stampJpeg);
 
-        if (img && xml && stampJpeg && jpeg) {
-            return true;
-        } else {
-            return false;
-        }
+        return img && xml /* && stampJpeg && jpeg */;
     }
 
     public static boolean sftp(
