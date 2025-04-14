@@ -1,9 +1,9 @@
 package br.com.zaiac.ebcofilemgmt.xml.classes.admindata;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name="AdminData")
+@XmlRootElement(name = "AdminData")
 public class AdminData {
     private String fileId;
     private String comments;
@@ -12,7 +12,8 @@ public class AdminData {
     public String getFileId() {
         return fileId;
     }
-    @XmlElement(name="FileId")
+
+    @XmlElement(name = "FileId")
     public void setFileId(String fileId) {
         this.fileId = fileId;
     }
@@ -21,7 +22,7 @@ public class AdminData {
         return comments;
     }
 
-    @XmlElement(name="Comments")
+    @XmlElement(name = "Comments")
     public void setComments(String comments) {
         this.comments = comments;
     }
@@ -30,19 +31,19 @@ public class AdminData {
         return vehicle;
     }
 
-    @XmlElement(name="Vehicle")
+    @XmlElement(name = "Vehicle")
     public void setVehicle(Vehicle vehicle) {
         this.vehicle = vehicle;
     }
-    
+
     public void createVehicle() {
         this.vehicle = new Vehicle();
     }
-    
+
     public void createTrailers() {
         this.vehicle.createTrailers();
     }
-    
+
     public void createTrailer() {
         this.vehicle.getTrailers().createTrailer();
     }

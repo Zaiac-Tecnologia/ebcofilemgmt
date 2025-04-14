@@ -84,11 +84,6 @@ public class MergeFiles {
                     "Cannot write missing file " + queueDirectory + "/" + queueFile + " with process step "
                             + processStep);
         }
-        // wfbw = new BufferedWriter(new FileWriter(new File(queueDirectory + "/" +
-        // queueFile), false));
-        // wfbw.write(processStep);
-        // wfbw.flush();
-        // wfbw.close();
     }
 
     public static synchronized String readStringFromMissingFile(String missingDirectory, String missingFile)
@@ -233,7 +228,7 @@ public class MergeFiles {
 
                     if (iaLocalAvailable) {
                         try {
-                            Image.getImageCheioVazio(baseDir, urlIaLocal, trkId);
+                            Image.getImageCheioVazio(baseDir, urlIaLocal, iaLocalAvailable, trkId);
                         } catch (IOException e) {
                             try {
                                 LogApp.writeLineToFile(
@@ -732,7 +727,7 @@ public class MergeFiles {
 
             if (iaLocalAvailable) {
                 try {
-                    Image.getImageCheioVazio(baseDir, urlIaLocal, trkId);
+                    Image.getImageCheioVazio(baseDir, urlIaLocal, iaLocalAvailable, trkId);
                 } catch (IOException e) {
                     System.err.println(e.toString());
                     LogApp.writeLineToFile(
@@ -809,7 +804,7 @@ public class MergeFiles {
             }
         } catch (
 
-                WriteLogFileException e) {
+        WriteLogFileException e) {
             e.printStackTrace();
             System.exit(10);
         } catch (Exception e) {
@@ -823,9 +818,9 @@ public class MergeFiles {
 
     /*
      * +---------------------------------------------------------------------------+
-     * | |
-     * | Enqueue to Process from the Service |
-     * | |
+     * |************************************************************************** |
+     * |************************* Enqueue to Process from the Service************* |
+     * |************************************************************************** |
      * +---------------------------------------------------------------------------+
      */
 
@@ -1168,9 +1163,9 @@ public class MergeFiles {
 
     /*
      * +---------------------------------------------------------------------------+
-     * | |
-     * | Merge Files into a ebco file |
-     * | |
+     * |************************************************************************** |
+     * |******************* Merge Files into a ebco file************************** |
+     * |************************************************************************** |
      * +---------------------------------------------------------------------------+
      */
 
@@ -1353,9 +1348,9 @@ public class MergeFiles {
 
     /*
      * +---------------------------------------------------------------------------+
-     * | |
-     * | Extract Files into a ebco file |
-     * | |
+     * |************************************************************************** |
+     * |*********************** Extract Files into a ebco file******************** |
+     * |************************************************************************** |
      * +---------------------------------------------------------------------------+
      */
 
@@ -1514,7 +1509,7 @@ public class MergeFiles {
         boolean xml = false;
         // boolean jpeg = false;
         boolean tif = false;
-        //boolean stampJpeg = false;
+        // boolean stampJpeg = false;
 
         for (File fileC : filesCopy) {
             if (fileC.isDirectory()) {
@@ -1532,9 +1527,9 @@ public class MergeFiles {
             if (filename.endsWith(".xml")) {
                 xml = true;
             }
-            //if (filename.endsWith("s_stamp.jpg")) {
-            //    stampJpeg = true;
-            //}
+            // if (filename.endsWith("s_stamp.jpg")) {
+            // stampJpeg = true;
+            // }
             // if (filename.endsWith("s.jpg")) {
             // jpeg = true;
             // }
@@ -1544,7 +1539,7 @@ public class MergeFiles {
         // " tif: " + tif
         // + " stampJpeg: " + stampJpeg);
 
-        return img && xml /*&& stampJpeg*/ && tif;
+        return img && xml /* && stampJpeg */ && tif;
     }
 
     public static boolean checkAllNeedFilesNuchtech(File[] filesCopy, String dirTruckCurrent) {
@@ -1582,8 +1577,8 @@ public class MergeFiles {
     public static boolean checkAllNeedFilesEbco(File[] filesCopy, String dirTruckCurrent) {
         boolean img = false;
         boolean xml = false;
-        boolean jpeg = false;
-        boolean stampJpeg = false;
+        // boolean jpeg = false;
+        // boolean stampJpeg = false;
 
         for (File fileC : filesCopy) {
             if (fileC.isDirectory()) {
@@ -1598,21 +1593,17 @@ public class MergeFiles {
             if (filename.endsWith(".xml")) {
                 xml = true;
             }
-            if (filename.endsWith("s_stamp.jpg")) {
-                stampJpeg = true;
-            }
-            if (filename.endsWith("s.jpg")) {
-                jpeg = true;
-            }
+            // if (filename.endsWith("s_stamp.jpg")) {
+            // stampJpeg = true;
+            // }
+            // if (filename.endsWith("s.jpg")) {
+            // jpeg = true;
+            // }
         }
         // System.out.println("img: " + img + " xml: " + xml + " jpeg: " + jpeg + "
         // stampJpeg: " + stampJpeg);
 
-        if (img && xml && stampJpeg && jpeg) {
-            return true;
-        } else {
-            return false;
-        }
+        return img && xml /* && stampJpeg && jpeg */;
     }
 
     public static boolean sftp(
