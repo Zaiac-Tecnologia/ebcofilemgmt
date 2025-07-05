@@ -14,6 +14,8 @@ import br.com.zaiac.ebcolibrary.ConfigProperties;
 import br.com.zaiac.ebcolibrary.ConvertXML;
 import br.com.zaiac.ebcolibrary.Util;
 import br.com.zaiac.ebcolibrary.exceptions.WriteLogFileException;
+import br.com.zaiac.ebcolibrary.models.ValidAlgorithm;
+import br.com.zaiac.ebcolibrary.models.ValidScanner;
 import br.com.zaiac.ebcolibrary.xml.smiths.DataForm;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -76,12 +78,12 @@ public class Main {
         String moveDir;
         String missingDirectory;
         String GoogleApplicationCredentials;
-        String scanner = "NENHUM";
+        ValidScanner scanner = ValidScanner.NONE;
         String siteDestination;
         String siteSFTPDestination;
         String siteSFTPUsername;
         String siteSFTPPassword;
-        String algoritimo;
+        ValidAlgorithm algoritimo = ValidAlgorithm.NONE;
         Integer siteSFTPPort;
         Boolean debugMode;
         String xmlConverter;
@@ -180,22 +182,17 @@ public class Main {
         Monitor.urlBackEnd = ConfigProperties.getPropertyValue("URL_BACKEND");
         Monitor.sourceSite = ConfigProperties.getPropertyValue("SOURCE_SITE");
 
-        scanner = ConfigProperties.getPropertyValue("SCANNER");
-        if (scanner == null || scanner.isEmpty()) {
-            System.out.println("Invalid scanner");
-            System.exit(1);
-        } else if ((scanner.equalsIgnoreCase("SMITHS")) || (scanner.equalsIgnoreCase("NUCHTECH"))) {
-        } else {
+        try {
+            scanner = ValidScanner.valueOf(ConfigProperties.getPropertyValue("SCANNER"));
+        } catch (IllegalArgumentException e) {
             System.out.println("Invalid scanner");
             System.exit(1);
         }
 
-        algoritimo = ConfigProperties.getPropertyValue("ALGORITIMO");
-        if (scanner == null || scanner.isEmpty()) {
+        try {
+            algoritimo = ValidAlgorithm.valueOf(ConfigProperties.getPropertyValue("ALGORITIMO"));
+        } catch (IllegalArgumentException e) {
             System.out.println("Invalid algoritimo");
-            System.exit(1);
-        } else if (!("SANTOSBRASIL.JBS".contains(algoritimo))) {
-            System.out.println("Invalid algorithm");
             System.exit(1);
         }
 
@@ -246,7 +243,7 @@ public class Main {
                 break;
             case "convertjson":
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
-                if (algoritimo.equals("SANTOSBRASIL")) {
+                if (algoritimo == ValidAlgorithm.SANTOSBRASIL) {
                     DataForm dataForm = ConvertXML.convertSmitsXmlToObject(
                             baseDir + "\\" + operation + "\\",
                             operation + ".xml");
@@ -274,13 +271,15 @@ public class Main {
                 urlIaLocal = ConfigProperties.getPropertyValue("URL_IA_LOCAL");
                 iaLocalAvailable = Boolean.getBoolean(ConfigProperties.getPropertyValue("IA_LOCAL_AVAILABLE"));
                 GoogleApplicationCredentials = ConfigProperties.getPropertyValue("GOOGLE_APPLICATION_CREDENTIALS");
+                algoritimo = ValidAlgorithm.valueOf(ConfigProperties.getPropertyValue("ALGORITIMO"));
+
                 // scanner = ConfigProperties.getPropertyValue("SCANNER");
 
                 Monitor.sendInformationToBackEnd(false);
 
                 try {
                     Image.getImageCheioVazio(baseDir, urlIaLocal, iaLocalAvailable, operation);
-                    MergeFiles.merge(baseDir, operation, scanner);
+                    MergeFiles.merge(baseDir, operation, scanner, algoritimo);
                     AsymmetricCryptography.encryptFile(baseDir, keyDir, operation);
                     SendFiles.uploadObject(
                             gcProject,
@@ -298,7 +297,7 @@ public class Main {
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
                 moveDir = ConfigProperties.getPropertyValue("MOVE_DIRECTORY");
                 missingDirectory = ConfigProperties.getPropertyValue("MISSING_DIRECTORY");
-                scanner = ConfigProperties.getPropertyValue("SCANNER");
+                scanner = ValidScanner.valueOf(ConfigProperties.getPropertyValue("SCANNER"));
 
                 Monitor.sendInformationToBackEnd(false);
 
@@ -334,7 +333,8 @@ public class Main {
                             null,
                             sftpCredentials,
                             null,
-                            scanner);
+                            scanner,
+                            algoritimo);
                 } else {
                     GoogleCredentials googleCredentials = new GoogleCredentials(
                             ConfigProperties.getPropertyValue("GC_PROJECT"),
@@ -351,21 +351,22 @@ public class Main {
                             urlIaLocal,
                             null,
                             googleCredentials,
-                            scanner);
+                            scanner,
+                            algoritimo);
                 }
                 break;
             case "merge":
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
-                scanner = ConfigProperties.getPropertyValue("SCANNER");
+                scanner = ValidScanner.valueOf(ConfigProperties.getPropertyValue("SCANNER"));
                 try {
-                    MergeFiles.merge(baseDir, operation, scanner);
+                    MergeFiles.merge(baseDir, operation, scanner, algoritimo);
                 } catch (ProcessIncompleteException e) {
                 }
                 break;
             case "movefiles":
                 baseDir = ConfigProperties.getPropertyValue("BASE_DIRECTORY");
                 moveDir = ConfigProperties.getPropertyValue("MOVE_DIRECTORY");
-                scanner = ConfigProperties.getPropertyValue("SCANNER");
+                scanner = ValidScanner.valueOf(ConfigProperties.getPropertyValue("SCANNER"));
                 try {
                     SendFiles.moveFiles(baseDir, moveDir, operation, scanner);
                 } catch (ProcessIncompleteException e) {
