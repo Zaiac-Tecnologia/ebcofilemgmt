@@ -5,6 +5,7 @@ import br.com.zaiac.ebcofilemgmt.cryptography.GenerateKeys;
 import br.com.zaiac.ebcofilemgmt.exception.ProcessIncompleteException;
 import br.com.zaiac.ebcofilemgmt.model.GoogleCredentials;
 import br.com.zaiac.ebcofilemgmt.model.SftpCredentials;
+import br.com.zaiac.ebcofilemgmt.tools.Constants;
 import br.com.zaiac.ebcofilemgmt.tools.Image;
 import br.com.zaiac.ebcofilemgmt.tools.MergeFiles;
 import br.com.zaiac.ebcofilemgmt.tools.Monitor;
@@ -54,7 +55,7 @@ import java.util.ArrayList;
  */
 
 public class Main {
-    private static final String version = "1.4";
+    private static final String version = Constants.APP_VERSION;
 
     public static void main(String[] args) throws IOException {
         int i;

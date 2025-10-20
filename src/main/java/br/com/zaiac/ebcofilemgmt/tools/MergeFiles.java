@@ -11,7 +11,7 @@ import br.com.zaiac.ebcolibrary.exceptions.WriteLogFileException;
 import br.com.zaiac.ebcolibrary.models.ValidAlgorithm;
 import br.com.zaiac.ebcolibrary.models.ValidScanner;
 
-import com.ctc.wstx.shaded.msv.org_isorelax.jaxp.ValidatingSAXParserFactory;
+//import com.ctc.wstx.shaded.msv.org_isorelax.jaxp.ValidatingSAXParserFactory;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -285,6 +285,9 @@ public class MergeFiles {
                         File fileCopy = new File(baseDirFile.getAbsolutePath());
                         File[] filesCopy = fileCopy.listFiles();
 
+                        System.out.println("-->>>> Processing Missing Truck Id " + trkId + " Scanner " + scanner
+                                + " Algorithm " + algoritimo);
+
                         if (checkEssentialsNeedFiles(scanner, algoritimo, filesCopy, trkId) == null) {
                             throw new ProcessIncompleteException();
                         }
@@ -323,7 +326,7 @@ public class MergeFiles {
                         }
                         Monitor.sendInformationToBackEnd(false);
                     } catch (ProcessIncompleteException e) {
-                        // System.out.println("Process Incompeto!!!!!");
+                        e.printStackTrace();
                         try {
                             LogApp.writeLineToFile(
                                     logDirectory,
@@ -783,6 +786,7 @@ public class MergeFiles {
         } catch (ProcessIncompleteException e) {
             try {
                 missing(missingDir, trkId, processStep);
+                e.printStackTrace();
                 if (!isMissingQueue) {
                     if (debugMode)
                         LogApp.writeLineToFile(
@@ -805,9 +809,7 @@ public class MergeFiles {
                 System.exit(10);
 
             }
-        } catch (
-
-        WriteLogFileException e) {
+        } catch (WriteLogFileException e) {
             e.printStackTrace();
             System.exit(10);
         } catch (Exception e) {

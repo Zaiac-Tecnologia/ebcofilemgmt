@@ -3,7 +3,7 @@ package br.com.zaiac.ebcofilemgmt.xml.classes.admindata;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name="Trailer")
+@XmlRootElement(name = "Trailer")
 public class Trailer {
     private String plateNumber;
     private String ocr;
@@ -12,8 +12,8 @@ public class Trailer {
     public String getPlateNumber() {
         return plateNumber;
     }
-    
-    @XmlElement(name="PlateNumber")
+
+    @XmlElement(name = "PlateNumber")
     public void setPlateNumber(String plateNumber) {
         this.plateNumber = plateNumber;
     }
@@ -22,7 +22,7 @@ public class Trailer {
         return ocr;
     }
 
-    @XmlElement(name="OCR")
+    @XmlElement(name = "OCR")
     public void setOcr(String ocr) {
         this.ocr = ocr;
     }
@@ -31,15 +31,13 @@ public class Trailer {
         return containers;
     }
 
-    @XmlElement(name="Containers")
+    @XmlElement(name = "Containers")
     public void setContainers(Containers containers) {
         this.containers = containers;
     }
-    
+
     public void createContainers() {
         this.containers = new Containers();
     }
-    
-            
-    
+
 }

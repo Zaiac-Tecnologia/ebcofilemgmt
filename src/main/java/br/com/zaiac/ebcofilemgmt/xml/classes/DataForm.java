@@ -196,7 +196,17 @@ public class DataForm {
         return this.adminData.getVehicle().getTrailers();
     }
 
-    public int createTrailer() {
+    public Integer createTrailer() {
+        // System.out.println("Creating trailer");
+        if (this.adminData.getVehicle() == null) {
+            // System.out.println("Vehicle is null, creating vehicle");
+            return null;
+        }
+        if (this.adminData.getVehicle().getTrailers() == null) {
+            // System.out.println("Trailers are null, creating trailers");
+            return null;
+        }
+
         return this.adminData.getVehicle().getTrailers().createTrailer();
     }
 

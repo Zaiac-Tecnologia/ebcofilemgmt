@@ -701,7 +701,7 @@ public class SendFiles {
         String yearMonth = null;
         String yearMonthDay = null;
 
-        if (scanner == ValidScanner.SMITHS) {
+        if (scanner == ValidScanner.SMITHS || scanner == ValidScanner.UFF) {
             yearMonth = trkId.substring(0, 6);
             yearMonthDay = trkId.substring(0, 8);
         } else {
