@@ -121,17 +121,31 @@ public class ConvertXmlFile {
         return items;
     }
 
-    public static int setTrailerValues(NodeList nlTrailer) {
+    public static int setTrailerValues(NodeList nlTrailers) {
         int items = 0;
-        for (int iTrailer = 0; iTrailer < nlTrailer.getLength(); iTrailer++) {
-            Node noTrailer = nlTrailer.item(iTrailer);
-            items += 1;
-            if (noTrailer.getNodeType() == Node.ELEMENT_NODE) {
-                Element eTrailer = (Element) noTrailer;
-                int i = dataForm.createTrailer();
-                Trailer thrailer = dataForm.getAdminData().getVehicle().getTrailers().getTrailerIndex(i);
-                thrailer.setOcr(eTrailer.getElementsByTagName("OCR").item(0).getTextContent());
-                thrailer.setPlateNumber("");
+        for (int nlTrailersItem = 0; nlTrailersItem < nlTrailers.getLength(); nlTrailersItem++) {
+            Element eTrailers = getElement(nlTrailers, nlTrailersItem);
+            dataForm.createTrailers();
+            NodeList nlTrailer = eTrailers.getElementsByTagName("Trailer");
+            // System.out.println("nlTrailer Length setTrailerValues " +
+            // nlTrailer.getLength());
+            for (int nlTrailerItem = 0; nlTrailerItem < nlTrailer.getLength(); nlTrailerItem++) {
+                Node noTrailer = nlTrailer.item(nlTrailerItem);
+                items += 1;
+                if (noTrailer.getNodeType() == Node.ELEMENT_NODE) {
+                    Element eTrailer = (Element) noTrailer;
+                    int i = dataForm.createTrailer();
+                    Trailer thrailer = dataForm.getAdminData().getVehicle().getTrailers().getTrailerIndex(i);
+                    thrailer.setOcr(eTrailer.getElementsByTagName("OCR").item(0).getTextContent());
+                    thrailer.setPlateNumber("");
+                    NodeList nlContainers = eTrailer.getElementsByTagName("Containers");
+                    thrailer.createContainers();
+                    setContainersValues(nlContainers, nlTrailerItem);
+                    Element eContainers = getElement(nlContainers, 0);
+                    NodeList nlContainer = eContainers.getElementsByTagName("Container");
+                    setContainerValues(nlContainer, nlTrailerItem);
+
+                }
             }
         }
         return items;
@@ -226,28 +240,67 @@ public class ConvertXmlFile {
             // Operation operation = new Operation();
             Node nodeOperation = nlOperation.item(iOperation);
             if (nodeOperation.getNodeType() == Node.ELEMENT_NODE) {
-                items += 1;
+                // items += 1;
                 Element eOperation = (Element) nodeOperation;
                 String type = eOperation.getAttribute("Type");
-                // System.out.println("Elemento 5 " + type + " " +
-                // eOperation.getElementsByTagName("Start").item(0).getTextContent());
-                int i = dataForm.createOperation();
-                Operation operation = dataForm.getOperationIndex(i);
+                String start = eOperation.getElementsByTagName("Start").item(0).getTextContent();
+                String end = (eOperation.getElementsByTagName("End").getLength() > 0
+                        && eOperation.getElementsByTagName("End").item(0) != null)
+                                ? eOperation.getElementsByTagName("End").item(0).getTextContent()
+                                : null;
+                String site = eOperation.getElementsByTagName("Site").item(0).getTextContent();
 
-                operation.setType(type);
-                operation.setStart(eOperation.getElementsByTagName("Start").item(0).getTextContent());
-                operation.setEnd(eOperation.getElementsByTagName("End").item(0).getTextContent());
-                operation.setSite(eOperation.getElementsByTagName("Site").item(0).getTextContent());
+                // int i = dataForm.createOperation();
+                // Operation operation = dataForm.getOperationIndex(i);
+
+                // operation.setType(type);
+                // operation.setEnd(end);
+                // operation.setSite(site);
 
                 if (type.endsWith("1")) {
+                    items += 1;
+                    // Element eOperation = (Element) nodeOperation;
+                    int i = dataForm.createOperation();
+                    Operation operation = dataForm.getOperationIndex(i);
+
+                    operation.setType(type);
+                    operation.setStart(start);
+                    operation.setEnd(end);
+                    operation.setSite(site);
+
                 } else if (type.endsWith("3")) {
                     Element eVerdict = (Element) eOperation.getElementsByTagName("Verdict").item(0);
-                    operation.setLogin(eOperation.getElementsByTagName("Login").item(0).getTextContent());
-                    operation.setComments(eOperation.getElementsByTagName("Comments").item(0).getTextContent());
-                    operation.setWorkstation(eOperation.getElementsByTagName("Workstation").item(0).getTextContent());
-                    // System.out.println("Type " + eVerdict.getAttribute("Value") + " Text " +
-                    // eVerdict.getTextContent());
-                    operation.createVerdict(eVerdict.getAttribute("Value"), eVerdict.getAttribute("Value"));
+
+                    String login = (eOperation.getElementsByTagName("Login").getLength() > 0
+                            && eOperation.getElementsByTagName("Login").item(0) != null)
+                                    ? eOperation.getElementsByTagName("Login").item(0).getTextContent()
+                                    : null;
+
+                    String comment = (eOperation.getElementsByTagName("Comments").getLength() > 0
+                            && eOperation.getElementsByTagName("Comments").item(0) != null)
+                                    ? eOperation.getElementsByTagName("Comments").item(0).getTextContent()
+                                    : null;
+                    String workstation = (eOperation.getElementsByTagName("Workstation").getLength() > 0
+                            && eOperation.getElementsByTagName("Workstation").item(0) != null)
+                                    ? eOperation.getElementsByTagName("Workstation").item(0).getTextContent()
+                                    : null;
+
+                    if (login != null) {
+                        items += 1;
+                        // Element eOperation = (Element) nodeOperation;
+                        int i = dataForm.createOperation();
+                        Operation operation = dataForm.getOperationIndex(i);
+                        operation.setType(type);
+                        operation.setStart(start);
+                        operation.setEnd(end);
+                        operation.setSite(site);
+                        operation.setLogin(login);
+                        operation.setComments(comment);
+                        operation.setWorkstation(workstation);
+                        // System.out.println("Type " + eVerdict.getAttribute("Value") + " Text " +
+                        // eVerdict.getTextContent());
+                        operation.createVerdict(eVerdict.getAttribute("Value"), eVerdict.getAttribute("Value"));
+                    }
                 }
             }
         }
@@ -277,8 +330,6 @@ public class ConvertXmlFile {
             if (!xmlSourceFile.exists()) {
                 throw new XMLFileException(String.format("File %s not found", xmlSourceFile.getAbsolutePath()));
             }
-            ;
-
             documentBuilderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
             documentBuilder = documentBuilderFactory.newDocumentBuilder();
             document = documentBuilder.parse(xmlSourceFile);
@@ -327,7 +378,12 @@ public class ConvertXmlFile {
             Element eAdminData = getElement(nlAdminData, 0);
 
             NodeList nlVehicle = eAdminData.getElementsByTagName("Vehicle");
-            // int nlVehicleItems = setVehicleValues(nlVehicle);
+            // System.out.println("nlVehicle Length " + nlVehicle.getLength());
+            setVehicleValues(nlVehicle);
+            dataForm.getAdminData().setCustom1(getOptionalTag(eAdminData, "Custom1"));
+            dataForm.getAdminData().setCustom2(getOptionalTag(eAdminData, "Custom2"));
+            dataForm.getAdminData().setCustom3(getOptionalTag(eAdminData, "Custom3"));
+            dataForm.getAdminData().setCustom4(getOptionalTag(eAdminData, "Custom4"));
             // AdminData adminData = dataForm.getAdminData(); //Somente uma entrada
 
             Element eVehicle = getElement(nlVehicle, 0);
@@ -338,8 +394,13 @@ public class ConvertXmlFile {
             Element eTrailers = getElement(nlTrailers, 0); // Somente uma entrada
             // Trailers trailers = dataForm.getTrailers();
 
+            // Coloquei esta linha
+            // dataForm.getAdminData().createVehicle();
+            // setTrailerValues(nlTrailers);
+            // setTrailersValues(nlTrailers);
+
             NodeList nlTrailer = eTrailers.getElementsByTagName("Trailer");
-            int nlTrailerItems = setTrailerValues(nlTrailer);
+            int nlTrailerItems = setTrailerValues(nlTrailers);
 
             for (int nlTrailerItem = 0; nlTrailerItem < nlTrailerItems; nlTrailerItem++) {
                 // Element eTrailer = getElement(nlTrailer, nlTrailerItem);
@@ -387,6 +448,11 @@ public class ConvertXmlFile {
         } catch (XMLFileException | IOException | JAXBException | ParserConfigurationException | SAXException e) {
             e.printStackTrace();
         }
+    }
+
+    private static String getOptionalTag(Element parent, String tag) {
+        NodeList list = parent.getElementsByTagName(tag);
+        return list.getLength() > 0 ? list.item(0).getTextContent() : null;
     }
 
 }

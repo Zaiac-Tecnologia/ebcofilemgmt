@@ -8,6 +8,9 @@ import br.com.zaiac.ebcofilemgmt.exception.WriteMissingException;
 import br.com.zaiac.ebcolibrary.LogApp;
 //import br.com.zaiac.ebcolibrary.Util;
 import br.com.zaiac.ebcolibrary.exceptions.WriteLogFileException;
+import br.com.zaiac.ebcolibrary.models.ValidAlgorithm;
+import br.com.zaiac.ebcolibrary.models.ValidScanner;
+
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
@@ -30,6 +33,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import static br.com.zaiac.ebcolibrary.Util.checkEssentialsNeedFiles;
 
 public class SendFiles {
 
@@ -42,6 +46,8 @@ public class SendFiles {
             String baseDir,
             String moveDir,
             String missingDir,
+            ValidScanner scanner,
+            ValidAlgorithm algoritimo,
             String siteDestination,
             String siteSFTPDestination,
             Integer siteSFTPPort,
@@ -117,7 +123,7 @@ public class SendFiles {
                         File fileCopy = new File(baseDirFile.getAbsolutePath());
                         File[] filesCopy = fileCopy.listFiles();
 
-                        if (!MergeFiles.checkAllNeedFilesEbco(filesCopy, trkId)) {
+                        if (checkEssentialsNeedFiles(scanner, algoritimo, filesCopy, trkId) == null) {
                             throw new ProcessIncompleteException();
                         }
 
@@ -285,7 +291,7 @@ public class SendFiles {
                         File[] filesCopy = fileCopy.listFiles();
 
                         processStep = "start";
-                        if (!MergeFiles.checkAllNeedFilesEbco(filesCopy, trkId)) {
+                        if (checkEssentialsNeedFiles(scanner, algoritimo, filesCopy, trkId) == null) {
                             throw new ProcessIncompleteException();
                         }
 
@@ -680,7 +686,7 @@ public class SendFiles {
 
     }
 
-    public static void moveFiles(String baseDir, String moveDir, String trkId, String scanner)
+    public static void moveFiles(String baseDir, String moveDir, String trkId, ValidScanner scanner)
             throws ProcessIncompleteException {
         try {
             logDirectory = new File("").getCanonicalPath() + "\\\\logs";
@@ -695,7 +701,7 @@ public class SendFiles {
         String yearMonth = null;
         String yearMonthDay = null;
 
-        if (scanner.equalsIgnoreCase("SMITHS")) {
+        if (scanner == ValidScanner.SMITHS || scanner == ValidScanner.UFF) {
             yearMonth = trkId.substring(0, 6);
             yearMonthDay = trkId.substring(0, 8);
         } else {

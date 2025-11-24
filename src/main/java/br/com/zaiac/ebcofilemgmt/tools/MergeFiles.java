@@ -8,6 +8,10 @@ import br.com.zaiac.ebcofilemgmt.model.SftpCredentials;
 import br.com.zaiac.ebcofilemgmt.xml.ConvertXmlFile;
 import br.com.zaiac.ebcolibrary.LogApp;
 import br.com.zaiac.ebcolibrary.exceptions.WriteLogFileException;
+import br.com.zaiac.ebcolibrary.models.ValidAlgorithm;
+import br.com.zaiac.ebcolibrary.models.ValidScanner;
+
+//import com.ctc.wstx.shaded.msv.org_isorelax.jaxp.ValidatingSAXParserFactory;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -42,6 +46,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 //import org.checkerframework.checker.units.qual.s;
+import static br.com.zaiac.ebcolibrary.Util.checkEssentialsNeedFiles;
 
 public class MergeFiles {
 
@@ -112,7 +117,8 @@ public class MergeFiles {
             String urlIaLocal,
             ArrayList<SftpCredentials> sftpCredentials,
             GoogleCredentials googleCredentials,
-            String scanner) {
+            ValidScanner scanner,
+            ValidAlgorithm algoritimo) {
         try {
             logDirectory = new File("").getCanonicalPath() + "\\\\logs";
         } catch (IOException e) {
@@ -279,14 +285,11 @@ public class MergeFiles {
                         File fileCopy = new File(baseDirFile.getAbsolutePath());
                         File[] filesCopy = fileCopy.listFiles();
 
-                        if (scanner.equalsIgnoreCase("SMITHS")) {
-                            if (!checkAllNeedFiles(filesCopy, trkId)) {
-                                throw new ProcessIncompleteException();
-                            }
-                        } else if (scanner.equalsIgnoreCase("NUCHTECH")) {
-                            if (!checkAllNeedFilesNuchtech(filesCopy, trkId)) {
-                                throw new ProcessIncompleteException();
-                            }
+                        System.out.println("-->>>> Processing Missing Truck Id " + trkId + " Scanner " + scanner
+                                + " Algorithm " + algoritimo);
+
+                        if (checkEssentialsNeedFiles(scanner, algoritimo, filesCopy, trkId) == null) {
+                            throw new ProcessIncompleteException();
                         }
                         processStep = readStringFromMissingFile(missingList.getAbsolutePath(), trkId);
 
@@ -294,6 +297,8 @@ public class MergeFiles {
                             processTruckIdToSftp(
                                     baseDir,
                                     missingDir,
+                                    scanner,
+                                    algoritimo,
                                     fileMissing,
                                     true,
                                     sftpCredentials,
@@ -317,11 +322,11 @@ public class MergeFiles {
                                     googleCredentials.getGoogleApplicationCredentials(),
                                     trkId,
                                     processStep,
-                                    scanner);
+                                    scanner, algoritimo);
                         }
                         Monitor.sendInformationToBackEnd(false);
                     } catch (ProcessIncompleteException e) {
-                        // System.out.println("Process Incompeto!!!!!");
+                        e.printStackTrace();
                         try {
                             LogApp.writeLineToFile(
                                     logDirectory,
@@ -434,6 +439,8 @@ public class MergeFiles {
                                 processTruckIdToSftp(
                                         baseDir,
                                         missingDir,
+                                        scanner,
+                                        algoritimo,
                                         fileQueueByPriority,
                                         false,
                                         sftpCredentials,
@@ -473,7 +480,7 @@ public class MergeFiles {
                                         googleCredentials.getGoogleApplicationCredentials(),
                                         trkId,
                                         "start",
-                                        scanner);
+                                        scanner, algoritimo);
                             }
                         }
                     } catch (NumberFormatException e) {
@@ -518,6 +525,8 @@ public class MergeFiles {
                     processTruckIdToSftp(
                             baseDir,
                             missingDir,
+                            scanner,
+                            algoritimo,
                             fileQueue,
                             false,
                             sftpCredentials,
@@ -554,7 +563,7 @@ public class MergeFiles {
                             googleCredentials.getGoogleApplicationCredentials(),
                             trkId,
                             "start",
-                            scanner);
+                            scanner, algoritimo);
                 }
             }
 
@@ -585,6 +594,8 @@ public class MergeFiles {
     private static String processTruckIdToSftp(
             String baseDir,
             String missingDir,
+            ValidScanner scanner,
+            ValidAlgorithm algoritimo,
             File fileQueue,
             boolean isMissingQueue,
             ArrayList<SftpCredentials> sftpCredentials,
@@ -608,7 +619,7 @@ public class MergeFiles {
                     }
                 }
 
-            if (!MergeFiles.checkAllNeedFilesEbco(filesCopy, trkId)) {
+            if (checkEssentialsNeedFiles(scanner, algoritimo, filesCopy, trkId) == null) {
                 if (debugMode)
                     LogApp.writeLineToFile(
                             logDirectory,
@@ -680,7 +691,8 @@ public class MergeFiles {
             String GoogleApplicationCredentials,
             String trkId,
             String processStep,
-            String scanner) {
+            ValidScanner scanner,
+            ValidAlgorithm algoritimo) {
         File baseDirFile = new File(baseDir + "\\\\" + trkId);
         /**
          * Nao posso deletar o arquivo da fila sem antes fazer todas
@@ -715,14 +727,8 @@ public class MergeFiles {
             File[] filesCopy = fileCopy.listFiles();
 
             processStep = "start";
-            if (scanner.equalsIgnoreCase("SMITHS")) {
-                if (!checkAllNeedFiles(filesCopy, trkId)) {
-                    throw new ProcessIncompleteException();
-                }
-            } else if (scanner.equalsIgnoreCase("NUCHTECH")) {
-                if (!checkAllNeedFilesNuchtech(filesCopy, trkId)) {
-                    throw new ProcessIncompleteException();
-                }
+            if (checkEssentialsNeedFiles(scanner, algoritimo, filesCopy, trkId) == null) {
+                throw new ProcessIncompleteException();
             }
 
             if (iaLocalAvailable) {
@@ -754,7 +760,7 @@ public class MergeFiles {
 
             processStep = "merge";
             if (currentProcessStepSequence <= 1) {
-                MergeFiles.merge(baseDir, trkId, scanner);
+                MergeFiles.merge(baseDir, trkId, scanner, algoritimo);
             }
 
             processStep = "encryptFile";
@@ -780,6 +786,7 @@ public class MergeFiles {
         } catch (ProcessIncompleteException e) {
             try {
                 missing(missingDir, trkId, processStep);
+                e.printStackTrace();
                 if (!isMissingQueue) {
                     if (debugMode)
                         LogApp.writeLineToFile(
@@ -802,9 +809,7 @@ public class MergeFiles {
                 System.exit(10);
 
             }
-        } catch (
-
-        WriteLogFileException e) {
+        } catch (WriteLogFileException e) {
             e.printStackTrace();
             System.exit(10);
         } catch (Exception e) {
@@ -1169,7 +1174,8 @@ public class MergeFiles {
      * +---------------------------------------------------------------------------+
      */
 
-    public static void merge(String baseDir, String trkId, String scanner) throws ProcessIncompleteException {
+    public static void merge(String baseDir, String trkId, ValidScanner scanner, ValidAlgorithm algoritimo)
+            throws ProcessIncompleteException {
         try {
             logDirectory = new File("").getCanonicalPath() + "\\logs";
         } catch (IOException e) {
@@ -1263,8 +1269,12 @@ public class MergeFiles {
             fi.renameTo(fo);
         }
 
-        if (scanner.equalsIgnoreCase("NUCHTECH")) {
+        if (scanner == ValidScanner.NUCHTECH || scanner == ValidScanner.RAPISCAN) {
             Image.convertJpegRgbToTiff(baseDir + "\\" + trkId, trkId, trkId + "S");
+        }
+
+        if (algoritimo == ValidAlgorithm.CONVCON) {
+            Image.convertJpegRgbToTiff(baseDir + "\\" + trkId, trkId + "S", trkId + "S");
         }
 
         try {
@@ -1303,6 +1313,8 @@ public class MergeFiles {
                     (File dir, String name) -> name.toLowerCase().endsWith(".xml") ||
                             name.toLowerCase().endsWith(".tif") ||
                             name.toLowerCase().endsWith(".img") ||
+                            name.toLowerCase().endsWith(".tiff") ||
+                            name.toLowerCase().endsWith(".uff") ||
                             name.toLowerCase().endsWith("_ocr.jpg") ||
                             name.toLowerCase().endsWith("s.jpg") ||
                             name.toLowerCase().endsWith(".json"))) {
@@ -1502,108 +1514,6 @@ public class MergeFiles {
         for (int i = 0; i < src.length; i++) {
             dst[offset + i] = src[i];
         }
-    }
-
-    public static boolean checkAllNeedFiles(File[] filesCopy, String dirTruckCurrent) {
-        boolean img = false;
-        boolean xml = false;
-        // boolean jpeg = false;
-        boolean tif = false;
-        // boolean stampJpeg = false;
-
-        for (File fileC : filesCopy) {
-            if (fileC.isDirectory()) {
-                continue;
-            }
-
-            String filename = fileC.getName().toLowerCase();
-
-            if (filename.endsWith("s.tif")) {
-                tif = true;
-            }
-            if (filename.endsWith("s.img")) {
-                img = true;
-            }
-            if (filename.endsWith(".xml")) {
-                xml = true;
-            }
-            // if (filename.endsWith("s_stamp.jpg")) {
-            // stampJpeg = true;
-            // }
-            // if (filename.endsWith("s.jpg")) {
-            // jpeg = true;
-            // }
-        }
-        // System.out.println(
-        // "trk" + dirTruckCurrent + "img: " + img + " xml: " + xml + " jpeg: " + jpeg +
-        // " tif: " + tif
-        // + " stampJpeg: " + stampJpeg);
-
-        return img && xml /* && stampJpeg */ && tif;
-    }
-
-    public static boolean checkAllNeedFilesNuchtech(File[] filesCopy, String dirTruckCurrent) {
-        boolean img = false;
-        boolean xml = false;
-        boolean jpeg = false;
-
-        for (File fileC : filesCopy) {
-            if (fileC.isDirectory()) {
-                continue;
-            }
-
-            String filename = fileC.getName().toLowerCase();
-
-            if (filename.endsWith(".img")) {
-                img = true;
-            }
-            if (filename.endsWith(".xml")) {
-                xml = true;
-            }
-            if (filename.endsWith(".jpg")) {
-                jpeg = true;
-            }
-        }
-        // System.out.println("trk" + dirTruckCurrent + "img: " + img + " xml: " + xml +
-        // " jpeg: " + jpeg);
-
-        if (img && xml && jpeg) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public static boolean checkAllNeedFilesEbco(File[] filesCopy, String dirTruckCurrent) {
-        boolean img = false;
-        boolean xml = false;
-        // boolean jpeg = false;
-        // boolean stampJpeg = false;
-
-        for (File fileC : filesCopy) {
-            if (fileC.isDirectory()) {
-                continue;
-            }
-
-            String filename = fileC.getName().toLowerCase();
-
-            if (filename.endsWith("s.img")) {
-                img = true;
-            }
-            if (filename.endsWith(".xml")) {
-                xml = true;
-            }
-            // if (filename.endsWith("s_stamp.jpg")) {
-            // stampJpeg = true;
-            // }
-            // if (filename.endsWith("s.jpg")) {
-            // jpeg = true;
-            // }
-        }
-        // System.out.println("img: " + img + " xml: " + xml + " jpeg: " + jpeg + "
-        // stampJpeg: " + stampJpeg);
-
-        return img && xml /* && stampJpeg && jpeg */;
     }
 
     public static boolean sftp(
