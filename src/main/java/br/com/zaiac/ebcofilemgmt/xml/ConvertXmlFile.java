@@ -380,6 +380,10 @@ public class ConvertXmlFile {
             NodeList nlVehicle = eAdminData.getElementsByTagName("Vehicle");
             // System.out.println("nlVehicle Length " + nlVehicle.getLength());
             setVehicleValues(nlVehicle);
+            dataForm.getAdminData().setCustom1(getOptionalTag(eAdminData, "Custom1"));
+            dataForm.getAdminData().setCustom2(getOptionalTag(eAdminData, "Custom2"));
+            dataForm.getAdminData().setCustom3(getOptionalTag(eAdminData, "Custom3"));
+            dataForm.getAdminData().setCustom4(getOptionalTag(eAdminData, "Custom4"));
             // AdminData adminData = dataForm.getAdminData(); //Somente uma entrada
 
             Element eVehicle = getElement(nlVehicle, 0);
@@ -444,6 +448,11 @@ public class ConvertXmlFile {
         } catch (XMLFileException | IOException | JAXBException | ParserConfigurationException | SAXException e) {
             e.printStackTrace();
         }
+    }
+
+    private static String getOptionalTag(Element parent, String tag) {
+        NodeList list = parent.getElementsByTagName(tag);
+        return list.getLength() > 0 ? list.item(0).getTextContent() : null;
     }
 
 }

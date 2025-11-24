@@ -23,6 +23,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
 /**
  * ?+------------------------------------------------------------------------+
  * ?|all.bat*****************************************************************|
@@ -57,7 +61,7 @@ import java.util.ArrayList;
 public class Main {
     private static final String version = Constants.APP_VERSION;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException {
         int i;
         String type = "";
         String operation = "";
