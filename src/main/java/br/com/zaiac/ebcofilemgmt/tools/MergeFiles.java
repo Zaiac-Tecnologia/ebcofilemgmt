@@ -1295,6 +1295,7 @@ public class MergeFiles {
                             name.toLowerCase().endsWith(".img") ||
                             name.toLowerCase().endsWith("_ocr.jpg") ||
                             name.toLowerCase().endsWith("s.jpg") ||
+                            name.toLowerCase().endsWith(".jpeg") ||
                             name.toLowerCase().endsWith(".json"))) {
                 jab.add("file_name", file.getName());
                 jab.add("file_size", file.length());
