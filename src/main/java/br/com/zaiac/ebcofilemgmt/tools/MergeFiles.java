@@ -1293,8 +1293,11 @@ public class MergeFiles {
                     (File dir, String name) -> name.toLowerCase().endsWith(".xml") ||
                             name.toLowerCase().endsWith(".tif") ||
                             name.toLowerCase().endsWith(".img") ||
+                            name.toLowerCase().endsWith(".tiff") ||
+                            name.toLowerCase().endsWith(".uff") ||
                             name.toLowerCase().endsWith("_ocr.jpg") ||
                             name.toLowerCase().endsWith("s.jpg") ||
+                            name.toLowerCase().endsWith(".jpeg") ||
                             name.toLowerCase().endsWith(".json"))) {
                 jab.add("file_name", file.getName());
                 jab.add("file_size", file.length());
@@ -1317,6 +1320,7 @@ public class MergeFiles {
                             name.toLowerCase().endsWith(".uff") ||
                             name.toLowerCase().endsWith("_ocr.jpg") ||
                             name.toLowerCase().endsWith("s.jpg") ||
+                            name.toLowerCase().endsWith(".jpeg") ||
                             name.toLowerCase().endsWith(".json"))) {
                 fileBytes = new byte[(int) file.length()];
                 fis = new FileInputStream(file);
