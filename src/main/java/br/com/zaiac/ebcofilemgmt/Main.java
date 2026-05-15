@@ -1,5 +1,14 @@
 package br.com.zaiac.ebcofilemgmt;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
 import br.com.zaiac.ebcofilemgmt.cryptography.AsymmetricCryptography;
 import br.com.zaiac.ebcofilemgmt.cryptography.GenerateKeys;
 import br.com.zaiac.ebcofilemgmt.exception.ProcessIncompleteException;
@@ -18,14 +27,6 @@ import br.com.zaiac.ebcolibrary.exceptions.WriteLogFileException;
 import br.com.zaiac.ebcolibrary.models.ValidAlgorithm;
 import br.com.zaiac.ebcolibrary.models.ValidScanner;
 import br.com.zaiac.ebcolibrary.xml.smiths.DataForm;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
 
 /**
  * ?+------------------------------------------------------------------------+
